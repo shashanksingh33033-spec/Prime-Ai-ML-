@@ -569,14 +569,17 @@
             );
         };
 
-        // --- 3. SECURE HLS PLAYER (Blob Streaming) ---
+        // --- 3. SECURE HLS PLAYER (Blob Streaming + Controls) ---
         const SecurePlayer = ({ videoId }) => {
             const videoRef = useRef(null);
+            const hlsRef = useRef(null);
+            const [qualities, setQualities] = useState([]);
+            const [currentQuality, setCurrentQuality] = useState(-1);
+            const [playbackRate, setPlaybackRate] = useState(1);
             
             // Decrypt URL at Runtime
             const streamUrl = useMemo(() => {
                 if(!videoId) return null;
-                // Base64 Decode 'https://fast.wistia.com/embed/medias/' to hide domain
                 const base = atob("aHR0cHM6Ly9mYXN0Lndpc3RpYS5jb20vZW1iZWQvbWVkaWFzLw==");
                 const ext = atob("Lm0zdTg="); 
                 return `${base}${videoId}${ext}`;
@@ -585,36 +588,118 @@
             useEffect(() => {
                 if (!streamUrl) return;
                 
+                // Reset state on new video
+                setQualities([]);
+                setCurrentQuality(-1);
+                setPlaybackRate(1);
+                if(videoRef.current) videoRef.current.playbackRate = 1;
+
                 if (Hls.isSupported()) {
+                    if (hlsRef.current) hlsRef.current.destroy(); // Cleanup prev instance
+                    
                     const hls = new Hls({
                         xhrSetup: function(xhr, url) {
-                            xhr.withCredentials = false; // Prevent Cookies
+                            xhr.withCredentials = false; 
                         }
                     });
+                    
+                    hlsRef.current = hls;
                     hls.loadSource(streamUrl);
                     hls.attachMedia(videoRef.current);
-                    return () => hls.destroy();
+                    
+                    hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                        // Extract quality levels
+                        const levels = data.levels.map((l, index) => ({
+                            id: index,
+                            label: l.height ? `${l.height}p` : `Level ${index}`
+                        }));
+                        // Sort high to low
+                        setQualities(levels.reverse());
+                    });
+                    
+                    return () => {
+                        hls.destroy();
+                    };
                 } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
                     videoRef.current.src = streamUrl;
                 }
             }, [streamUrl]);
 
+            const changeQuality = (levelId) => {
+                const level = Number(levelId);
+                setCurrentQuality(level);
+                if (hlsRef.current) {
+                    hlsRef.current.currentLevel = level;
+                }
+            };
+
+            const changeSpeed = (speed) => {
+                const rate = Number(speed);
+                setPlaybackRate(rate);
+                if (videoRef.current) {
+                    videoRef.current.playbackRate = rate;
+                }
+            };
+
             if(!videoId) return (
-                <div className="h-full flex flex-col items-center justify-center text-slate-600 bg-black">
+                <div className="h-full flex flex-col items-center justify-center text-slate-600 bg-black aspect-video rounded-2xl">
                     <span className="text-4xl mb-2">🔒</span>
                     <span className="text-xs font-bold uppercase tracking-widest">Content Locked</span>
                 </div>
             );
 
             return (
-                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative">
-                    <video 
-                        ref={videoRef} 
-                        controls 
-                        className="w-full h-full"
-                        onContextMenu={(e) => e.preventDefault()} // Disable Right Click
-                        controlsList="nodownload" // Disable Download Menu
-                    />
+                <div className="space-y-4">
+                    <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative">
+                        <video 
+                            ref={videoRef} 
+                            controls 
+                            className="w-full h-full"
+                            onContextMenu={(e) => e.preventDefault()} 
+                            controlsList="nodownload" 
+                        />
+                    </div>
+                    
+                    {/* CUSTOM CONTROLS BAR */}
+                    <div className="glass-panel p-3 rounded-xl flex flex-wrap items-center gap-4 border border-slate-700/50">
+                        
+                        {/* Speed Control */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Speed</span>
+                            <select 
+                                value={playbackRate}
+                                onChange={(e) => changeSpeed(e.target.value)}
+                                className="bg-slate-900 border border-slate-700 text-white text-xs rounded px-2 py-1 outline-none focus:border-blue-500 font-mono"
+                            >
+                                <option value="0.5">0.5x</option>
+                                <option value="0.75">0.75x</option>
+                                <option value="1">1.0x (Normal)</option>
+                                <option value="1.25">1.25x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2.0x</option>
+                            </select>
+                        </div>
+
+                        {/* Quality Control (Only visible if HLS levels detected) */}
+                        {qualities.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quality</span>
+                                <select 
+                                    value={currentQuality}
+                                    onChange={(e) => changeQuality(e.target.value)}
+                                    className="bg-slate-900 border border-slate-700 text-white text-xs rounded px-2 py-1 outline-none focus:border-blue-500 font-mono"
+                                >
+                                    <option value="-1">Auto (Adaptive)</option>
+                                    {qualities.map((q) => (
+                                        <option key={q.id} value={q.id}>{q.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        
+                        <div className="flex-1"></div>
+                        <div className="text-[10px] text-slate-500 font-mono hidden md:block">SECURE PLAYER v2.0</div>
+                    </div>
                 </div>
             );
         };
