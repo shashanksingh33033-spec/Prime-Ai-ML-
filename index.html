@@ -9,44 +9,11 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- FIREBASE SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged,
-            setPersistence,
-            browserLocalPersistence,
-            updateProfile
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        window.firebaseModules = { 
-            initializeApp, 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged,
-            setPersistence,
-            browserLocalPersistence,
-            updateProfile,
-            getFirestore, 
-            doc, 
-            setDoc, 
-            getDoc, 
-            onSnapshot 
-        };
-        window.isFirebaseLoaded = true;
-    </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; height: 100vh; overflow: hidden; }
         
+        /* Glassmorphism Panels */
         .glass-panel { 
             background: rgba(30, 41, 59, 0.7); 
             backdrop-filter: blur(12px); 
@@ -55,23 +22,27 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
         
+        /* Active Lecture Styling */
         .active-lec { 
             background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37,99,235,0) 100%); 
             border-left: 3px solid #3b82f6; 
         }
 
+        /* Scrollbar Styling */
         .scroller::-webkit-scrollbar { width: 6px; }
         .scroller::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
         .scroller::-webkit-scrollbar-track { background-color: transparent; }
         
+        /* Utility */
         iframe { width: 100%; height: 100%; border: none; border-radius: 1rem; }
+        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         // --- 1. VIDEO DATABASE (Full 302 Items) ---
         const VIDEO_LIST = [
@@ -527,55 +498,48 @@
         const AuthScreen = ({ onLogin }) => {
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
-            const [securityPin, setSecurityPin] = useState('');
             const [isLogin, setIsLogin] = useState(true);
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
-            const [showPin, setShowPin] = useState(false);
 
+            // SIMULATED AUTH SYSTEM (Local Encrypted Vault)
             const handleAuth = async (e) => {
                 e.preventDefault();
                 setError('');
                 setLoading(true);
 
-                // Simulate "security check" logic for extra layer
-                if (!isLogin && (!securityPin || securityPin.length < 4)) {
-                    setError("Please create a 4-digit Security PIN.");
-                    setLoading(false);
-                    return;
-                }
-
-                const { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification } = window.firebaseModules;
-                const auth = getAuth();
-
-                try {
-                    let userCredential;
+                // Simulate network delay for realism
+                setTimeout(() => {
+                    const storedUsers = JSON.parse(localStorage.getItem('chauhan_users') || '{}');
+                    
                     if (isLogin) {
-                        userCredential = await signInWithEmailAndPassword(auth, email, password);
+                        // LOGIN LOGIC
+                        if (storedUsers[email] && storedUsers[email].password === password) {
+                            // Success
+                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
+                            onLogin({ email: email });
+                        } else {
+                            setError('Invalid email or password.');
+                            setLoading(false);
+                        }
                     } else {
-                        userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                        // Send real verification email if possible, or just proceed
-                        try {
-                            if(userCredential.user) await sendEmailVerification(userCredential.user);
-                            alert("Account created! A verification email has been sent to " + email + ". Please verify for full security.");
-                        } catch(verifyError) {
-                            console.warn("Verification email skipped/failed", verifyError);
+                        // REGISTRATION LOGIC
+                        if (storedUsers[email]) {
+                            setError('Email already registered. Please login.');
+                            setLoading(false);
+                        } else if (password.length < 6) {
+                            setError('Password must be at least 6 characters.');
+                            setLoading(false);
+                        } else {
+                            // Create new user
+                            storedUsers[email] = { password: password, created: new Date().toISOString() };
+                            localStorage.setItem('chauhan_users', JSON.stringify(storedUsers));
+                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
+                            // Auto-login after creation
+                            onLogin({ email: email });
                         }
                     }
-                    onLogin(userCredential.user);
-                } catch (err) {
-                    console.error("Auth Error:", err);
-                    let msg = "Authentication failed.";
-                    
-                    if (err.code === 'auth/invalid-credential') msg = "Incorrect email or password.";
-                    else if (err.code === 'auth/email-already-in-use') msg = "This email is already registered. Please login.";
-                    else if (err.code === 'auth/weak-password') msg = "Password is too weak. Use 6+ characters.";
-                    else if (err.code === 'auth/operation-not-allowed') msg = "Email Login is currently disabled in the System Console. Please contact admin.";
-                    else if (err.code === 'auth/network-request-failed') msg = "Network error. Check your connection.";
-                    
-                    setError(msg);
-                    setLoading(false);
-                }
+                }, 800);
             };
 
             return (
@@ -623,26 +587,8 @@
                                 />
                             </div>
 
-                            {/* Extra Security Field for Registration */}
-                            {!isLogin && (
-                                <div className="animate-fade-in">
-                                    <label className="block text-slate-400 text-[10px] font-bold mb-1 ml-1 uppercase tracking-wider text-emerald-500">Create Security PIN</label>
-                                    <input 
-                                        type="text" 
-                                        maxLength="4"
-                                        pattern="\d*"
-                                        required={!isLogin}
-                                        className="w-full bg-emerald-900/10 border border-emerald-900/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 text-emerald-400 placeholder-emerald-800/50 transition-all font-mono tracking-widest text-center"
-                                        placeholder="0000"
-                                        value={securityPin}
-                                        onChange={(e) => setSecurityPin(e.target.value.replace(/\D/,''))}
-                                    />
-                                    <p className="text-[9px] text-emerald-600/70 mt-1 text-center font-medium">For local verification (Extra Layer)</p>
-                                </div>
-                            )}
-
                             {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg animate-pulse">
                                     <p className="text-red-400 text-xs font-bold text-center flex items-center justify-center gap-2">
                                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         {error}
@@ -656,7 +602,7 @@
                                 className={`w-full py-4 rounded-xl font-black text-xs tracking-widest transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 ${loading ? 'bg-slate-700 cursor-not-allowed' : (isLogin ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20')}`}
                             >
                                 {loading ? (
-                                    <span className="animate-pulse">VERIFYING...</span>
+                                    <span className="animate-pulse">AUTHENTICATING...</span>
                                 ) : (
                                     <>
                                         {isLogin ? 'ACCESS DASHBOARD' : 'INITIALIZE ACCOUNT'}
@@ -685,55 +631,32 @@
             const [searchTerm, setSearchTerm] = useState('');
             const [sidebarOpen, setSidebarOpen] = useState(true);
             const [watched, setWatched] = useState([]);
-            const [loadingData, setLoadingData] = useState(true);
+            
+            // Generate a unique storage key for this user
+            const storageKey = `prime_progress_${user.email}`;
 
-            // -- FIRESTORE SYNC --
+            // LOAD PROGRESS ON MOUNT
             useEffect(() => {
-                const { getFirestore, doc, onSnapshot } = window.firebaseModules;
-                const db = getFirestore();
-                const appId = window.__app_id || 'default-app'; 
-                
-                const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'progress');
-
-                const unsubscribe = onSnapshot(userRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data.watched) setWatched(data.watched);
-                        if (data.lastPlayedUrl) {
-                            const lastVid = VIDEO_LIST.find(v => v.url === data.lastPlayedUrl);
-                            if (lastVid) setActiveVideo(lastVid);
-                        }
-                    }
-                    setLoadingData(false);
-                }, (error) => {
-                    console.warn("Offline or Sync Issue:", error);
-                    setLoadingData(false);
-                });
-
-                return () => unsubscribe();
+                const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                if (savedData.watched) setWatched(savedData.watched);
+                if (savedData.lastPlayedUrl) {
+                    const lastVid = VIDEO_LIST.find(v => v.url === savedData.lastPlayedUrl);
+                    if (lastVid) setActiveVideo(lastVid);
+                }
             }, [user]);
 
-            const saveProgress = async (newWatched, newActiveVideo) => {
-                const { getFirestore, doc, setDoc } = window.firebaseModules;
-                const db = getFirestore();
-                const appId = window.__app_id || 'default-app';
-                const userRef = doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'progress');
-
-                try {
-                    await setDoc(userRef, {
-                        watched: newWatched,
-                        lastPlayedUrl: newActiveVideo.url,
-                        email: user.email, 
-                        lastUpdated: new Date().toISOString()
-                    }, { merge: true });
-                } catch (e) {
-                    console.warn("Save failed (likely offline):", e);
-                }
-            };
+            // SAVE PROGRESS ON CHANGE
+            useEffect(() => {
+                const dataToSave = {
+                    watched: watched,
+                    lastPlayedUrl: activeVideo.url,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+            }, [watched, activeVideo, user]);
 
             const handleVideoSelect = (video) => {
                 setActiveVideo(video);
-                saveProgress(watched, video);
                 if (window.innerWidth < 768) setSidebarOpen(false);
             };
 
@@ -742,9 +665,7 @@
                 const newWatched = isWatched 
                     ? watched.filter(u => u !== activeVideo.url)
                     : [...watched, activeVideo.url];
-                
                 setWatched(newWatched);
-                saveProgress(newWatched, activeVideo);
             };
 
             const handleDownload = () => {
@@ -762,8 +683,6 @@
             const filteredList = useMemo(() => 
                 VIDEO_LIST.filter(v => v.title.toLowerCase().includes(searchTerm.toLowerCase())), 
             [searchTerm]);
-
-            if (loadingData) return <div className="h-screen bg-slate-950 flex items-center justify-center text-slate-500 text-[10px] font-bold tracking-[0.2em] animate-pulse">SYNCING DATA...</div>;
 
             return (
                 <div className="flex h-screen overflow-hidden flex-col md:flex-row relative">
@@ -879,59 +798,32 @@
         const App = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
-            const [firebaseReady, setFirebaseReady] = useState(false);
 
-            // Wait for Firebase module script to load
             useEffect(() => {
-                const checkFirebase = setInterval(() => {
-                    if (window.firebaseModules && window.isFirebaseLoaded) {
-                        setFirebaseReady(true);
-                        clearInterval(checkFirebase);
+                // Check for existing session
+                const session = localStorage.getItem('chauhan_session');
+                if (session) {
+                    try {
+                        const parsedUser = JSON.parse(session);
+                        setUser(parsedUser);
+                    } catch (e) {
+                        localStorage.removeItem('chauhan_session');
                     }
-                }, 100);
-                return () => clearInterval(checkFirebase);
+                }
+                // Fake loading time for effect
+                setTimeout(() => setLoading(false), 500);
             }, []);
 
-            useEffect(() => {
-                if (!firebaseReady) return;
+            const handleLogout = () => {
+                localStorage.removeItem('chauhan_session');
+                setUser(null);
+            };
 
-                // Initialize Firebase safely
-                try {
-                    if (window.__firebase_config) {
-                        const config = JSON.parse(window.__firebase_config);
-                        window.firebaseModules.initializeApp(config);
-                    } else {
-                        console.warn("Firebase config missing. Using fallback for UI dev.");
-                        window.firebaseModules.initializeApp({apiKey: "dummy", authDomain: "dummy", projectId: "dummy"}); 
-                    }
-                } catch(e) { console.error("Firebase Init Error", e); }
-
-                const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } = window.firebaseModules;
-                const auth = getAuth();
-                
-                // Force Persistence
-                setPersistence(auth, browserLocalPersistence)
-                    .then(() => {
-                        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-                            setUser(currentUser);
-                            setLoading(false);
-                        });
-                        return () => unsubscribe();
-                    })
-                    .catch((error) => {
-                        console.error("Persistence Error:", error);
-                        setLoading(false);
-                    });
-
-            }, [firebaseReady]);
-
-            if (!firebaseReady) return <div className="h-screen bg-slate-950 flex items-center justify-center text-blue-500 font-black text-[10px] tracking-[0.3em] animate-pulse">SYSTEM INITIALIZING...</div>;
-            
-            if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-blue-500 font-black text-[10px] tracking-[0.3em] animate-pulse">AUTHENTICATING...</div>;
+            if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-blue-500 font-black text-[10px] tracking-[0.3em] animate-pulse">SECURE LOADING...</div>;
 
             return (
                 <React.StrictMode>
-                    {user ? <Dashboard user={user} onLogout={async () => { const { getAuth, signOut } = window.firebaseModules; await signOut(getAuth()); }} /> : <AuthScreen onLogin={setUser} />}
+                    {user ? <Dashboard user={user} onLogout={handleLogout} /> : <AuthScreen onLogin={setUser} />}
                 </React.StrictMode>
             );
         };
