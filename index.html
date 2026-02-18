@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prime AI/ML Dashboard - Chauhan Secure</title>
+    <title>SHASHANK SINGH RAJPUT AI/ML Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -510,13 +510,13 @@
 
                 // Simulate network delay for realism
                 setTimeout(() => {
-                    const storedUsers = JSON.parse(localStorage.getItem('chauhan_users') || '{}');
+                    const storedUsers = JSON.parse(localStorage.getItem('SHASHANK_users') || '{}');
                     
                     if (isLogin) {
                         // LOGIN LOGIC
                         if (storedUsers[email] && storedUsers[email].password === password) {
                             // Success
-                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
+                            localStorage.setItem('SHASHANK_session', JSON.stringify({ email: email }));
                             onLogin({ email: email });
                         } else {
                             setError('Invalid email or password.');
@@ -533,8 +533,8 @@
                         } else {
                             // Create new user
                             storedUsers[email] = { password: password, created: new Date().toISOString() };
-                            localStorage.setItem('chauhan_users', JSON.stringify(storedUsers));
-                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
+                            localStorage.setItem('SHASHANK_users', JSON.stringify(storedUsers));
+                            localStorage.setItem('SHASHANK_session', JSON.stringify({ email: email }));
                             // Auto-login after creation
                             onLogin({ email: email });
                         }
@@ -552,8 +552,8 @@
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
                         
                         <div className="mb-6">
-                            <h1 className="text-2xl font-black tracking-tight text-white mb-1">PRIME <span className="text-blue-500">AI/ML</span></h1>
-                            <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">Chauhan Rajput Edition</p>
+                            <h1 className="text-2xl font-black tracking-tight text-white mb-1">SHASHANK <span className="text-blue-500">AI/ML</span></h1>
+                            <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">SHASHANK Rajput Edition</p>
                         </div>
 
                         <div className="mb-6 bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex items-center gap-3">
@@ -700,7 +700,7 @@
                     <aside className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-80 bg-slate-900 border-r border-slate-800 h-full absolute md:relative z-40 transition-all duration-300`}>
                         <div className="p-6 border-b border-slate-800 bg-slate-900/95 backdrop-blur">
                             <div className="flex justify-between items-center mb-4">
-                                <h1 className="text-lg font-black tracking-tighter text-white">PRIME <span className="text-blue-500">AI/ML</span></h1>
+                                <h1 className="text-lg font-black tracking-tighter text-white">SHASHANK <span className="text-blue-500">AI/ML</span></h1>
                                 <button onClick={onLogout} className="text-[9px] font-bold text-red-400 hover:text-red-300 border border-red-500/20 hover:bg-red-500/10 px-2 py-1 rounded transition-all uppercase tracking-wide">Logout</button>
                             </div>
                             <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
@@ -801,13 +801,13 @@
 
             useEffect(() => {
                 // Check for existing session
-                const session = localStorage.getItem('chauhan_session');
+                const session = localStorage.getItem('SHASHANK_session');
                 if (session) {
                     try {
                         const parsedUser = JSON.parse(session);
                         setUser(parsedUser);
                     } catch (e) {
-                        localStorage.removeItem('chauhan_session');
+                        localStorage.removeItem('SHASHANK_session');
                     }
                 }
                 // Fake loading time for effect
@@ -815,7 +815,7 @@
             }, []);
 
             const handleLogout = () => {
-                localStorage.removeItem('chauhan_session');
+                localStorage.removeItem('SHASHANK_session');
                 setUser(null);
             };
 
@@ -832,4 +832,5 @@
         root.render(<App />);
     </script>
 </body>
+    <footer>All rights reserved to Shashank himself.</footer>
 </html>
