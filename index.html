@@ -70,6 +70,9 @@
                 max-width: 300px;
                 transform: translateX(-100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                /* Ensure it's a flex container on mobile via CSS too as a backup */
+                display: flex;
+                flex-direction: column;
             }
             .mobile-sidebar.open {
                 transform: translateX(0);
@@ -818,7 +821,7 @@
                     ></div>
 
                     {/* SIDEBAR (Responsive) */}
-                    <aside className={`mobile-sidebar md:relative md:flex md:flex-col md:w-80 bg-slate-900 border-r border-slate-800 h-full md:transform-none ${sidebarOpen ? 'open' : ''}`}>
+                    <aside className={`mobile-sidebar flex flex-col md:relative md:w-80 bg-slate-900 border-r border-slate-800 h-full md:transform-none ${sidebarOpen ? 'open' : ''}`}>
                         <div className="p-6 border-b border-slate-800 bg-slate-900">
                             <div className="flex justify-between items-center mb-4">
                                 <h1 className="text-lg font-black text-white tracking-tight">PRIME <span className="text-blue-500">AI</span></h1>
@@ -846,7 +849,7 @@
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto scroller p-2 space-y-1 bg-slate-900 pb-safe">
+                        <div className="flex-1 overflow-y-auto scroller p-2 space-y-1 bg-slate-900 pb-24">
                             {filteredList.map((v, i) => {
                                 const isActive = activeVideo.i === v.i;
                                 const isWatched = watched.includes(v.i);
