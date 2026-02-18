@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHASHANK SINGH RAJPUT AI/ML Dashboard</title>
+    <title>Prime AI/ML Dashboard - Chauhan Secure</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- HLS.js for Blob Streaming -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; height: 100vh; overflow: hidden; }
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: white; margin: 0; height: 100vh; overflow: hidden; user-select: none; -webkit-user-select: none; }
         
         /* Glassmorphism Panels */
         .glass-panel { 
@@ -22,479 +24,480 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
         
-        /* Active Lecture Styling */
         .active-lec { 
             background: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(37,99,235,0) 100%); 
             border-left: 3px solid #3b82f6; 
         }
 
-        /* Scrollbar Styling */
         .scroller::-webkit-scrollbar { width: 6px; }
         .scroller::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 10px; }
         .scroller::-webkit-scrollbar-track { background-color: transparent; }
         
-        /* Utility */
-        iframe { width: 100%; height: 100%; border: none; border-radius: 1rem; }
-        .text-shadow { text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        /* Security Overrides */
+        video { outline: none; border-radius: 1rem; width: 100%; height: 100%; background: black; }
+        video::-webkit-media-controls-enclosure { overflow: hidden; }
+        video::-webkit-media-controls-panel { width: calc(100% + 30px); }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
     <div id="root"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- 1. VIDEO DATABASE (Full 302 Items) ---
-        const VIDEO_LIST = [
-            {"title": "Orientation Session (Group1)", "url": "https://fast.wistia.com/embed/medias/06tldonb8e.m3u8"},
-            {"title": "Orientation Session (Group2)", "url": "https://fast.wistia.com/embed/medias/2xknh67o6e.m3u8"},
-            {"title": "LinkedIn Mentorship Session by Aman Sir", "url": "https://fast.wistia.com/embed/medias/9l3tty6mx1.m3u8"},
-            {"title": "GSoC Mentorship Session", "url": "https://fast.wistia.com/embed/medias/o4febgf4go.m3u8"},
-            {"title": "Course Objective", "url": "https://fast.wistia.com/embed/medias/wkujeejs3a.m3u8"},
-            {"title": "What will we Learn?", "url": "https://fast.wistia.com/embed/medias/rsniy0riw6.m3u8"},
-            {"title": "Schedule", "url": "https://fast.wistia.com/embed/medias/4i3oxtsq3k.m3u8"},
-            {"title": "Why did we choose Python?", "url": "https://fast.wistia.com/embed/medias/855fmh02ab.m3u8"},
-            {"title": "Tools to Install", "url": "https://fast.wistia.com/embed/medias/cz0f5pamfs.m3u8"},
-            {"title": "Using Visual Studio Code", "url": "https://fast.wistia.com/embed/medias/bq8e34txli.m3u8"},
-            {"title": "Our First Program", "url": "https://fast.wistia.com/embed/medias/fpa8hfpqqg.m3u8"},
-            {"title": "Variables in Python", "url": "https://fast.wistia.com/embed/medias/n8gqwiclkc.m3u8"},
-            {"title": "Data Types in Python", "url": "https://fast.wistia.com/embed/medias/hlf54dd4xw.m3u8"},
-            {"title": "Keywords & Comments", "url": "https://fast.wistia.com/embed/medias/v1gbqf2yeg.m3u8"},
-            {"title": "Style Guide", "url": "https://fast.wistia.com/embed/medias/6nm3mlt9s8.m3u8"},
-            {"title": "Arithmetic Operators", "url": "https://fast.wistia.com/embed/medias/ovgnnzfio4.m3u8"},
-            {"title": "Relational Operators", "url": "https://fast.wistia.com/embed/medias/o1w2wu8se3.m3u8"},
-            {"title": "Assignment Operators", "url": "https://fast.wistia.com/embed/medias/ioqw0jzmf3.m3u8"},
-            {"title": "Logical Operators", "url": "https://fast.wistia.com/embed/medias/t994m2lbt5.m3u8"},
-            {"title": "Operator Precedence", "url": "https://fast.wistia.com/embed/medias/vwuhakkgkb.m3u8"},
-            {"title": "Type Conversion & Casting", "url": "https://fast.wistia.com/embed/medias/f6coq9ckzz.m3u8"},
-            {"title": "Taking User Input", "url": "https://fast.wistia.com/embed/medias/v2k8lnbh2k.m3u8"},
-            {"title": "Average of 2 Nums", "url": "https://fast.wistia.com/embed/medias/rfqo3lea0c.m3u8"},
-            {"title": "Conditional Statements in Python", "url": "https://fast.wistia.com/embed/medias/o6scziys0t.m3u8"},
-            {"title": "Practice Examples (Conditionals)", "url": "https://fast.wistia.com/embed/medias/pz71ifiv96.m3u8"},
-            {"title": "Odd or Even", "url": "https://fast.wistia.com/embed/medias/8f6i81islo.m3u8"},
-            {"title": "Nesting", "url": "https://fast.wistia.com/embed/medias/reulhpja6h.m3u8"},
-            {"title": "Match case in Python", "url": "https://fast.wistia.com/embed/medias/vn35pnfpve.m3u8"},
-            {"title": "Loops using while", "url": "https://fast.wistia.com/embed/medias/nf1j03perk.m3u8"},
-            {"title": "Practice Examples (Loops)", "url": "https://fast.wistia.com/embed/medias/h5mm71ua4s.m3u8"},
-            {"title": "Multiplication Table of N", "url": "https://fast.wistia.com/embed/medias/fbbn2l8qrp.m3u8"},
-            {"title": "Break & Continue", "url": "https://fast.wistia.com/embed/medias/0lygufiv5g.m3u8"},
-            {"title": "Loops using for", "url": "https://fast.wistia.com/embed/medias/6vbr73fwz0.m3u8"},
-            {"title": "Vowel Count", "url": "https://fast.wistia.com/embed/medias/9rmrts6ezs.m3u8"},
-            {"title": "range( ) Function", "url": "https://fast.wistia.com/embed/medias/h88w7q8wx6.m3u8"},
-            {"title": "Sum of N numbers", "url": "https://fast.wistia.com/embed/medias/a78py3keyr.m3u8"},
-            {"title": "Functions in Python", "url": "https://fast.wistia.com/embed/medias/7vxm4oef15.m3u8"},
-            {"title": "Practice Examples (Functions)", "url": "https://fast.wistia.com/embed/medias/e2405u9l4v.m3u8"},
-            {"title": "Types of Functions", "url": "https://fast.wistia.com/embed/medias/0cb63612ru.m3u8"},
-            {"title": "Lambda Functions", "url": "https://fast.wistia.com/embed/medias/7t6crrtwod.m3u8"},
-            {"title": "Factorial of N", "url": "https://fast.wistia.com/embed/medias/01eegarow9.m3u8"},
-            {"title": "Strings in Python", "url": "https://fast.wistia.com/embed/medias/6l88u1h9za.m3u8"},
-            {"title": "Slicing in Strings", "url": "https://fast.wistia.com/embed/medias/4tk7gwi3at.m3u8"},
-            {"title": "String Formatting", "url": "https://fast.wistia.com/embed/medias/8xfu1615xl.m3u8"},
-            {"title": "Lists in Python", "url": "https://fast.wistia.com/embed/medias/lu1ewbnygw.m3u8"},
-            {"title": "List Methods", "url": "https://fast.wistia.com/embed/medias/xg4s5p42x4.m3u8"},
-            {"title": "Using Loops with Lists", "url": "https://fast.wistia.com/embed/medias/dqx8qp1vxn.m3u8"},
-            {"title": "Tuples in Python", "url": "https://fast.wistia.com/embed/medias/lgigl82p06.m3u8"},
-            {"title": "Tuple Methods", "url": "https://fast.wistia.com/embed/medias/r01vaql6er.m3u8"},
-            {"title": "Dictionary in Python", "url": "https://fast.wistia.com/embed/medias/9kujh99adj.m3u8"},
-            {"title": "Dictionary Methods", "url": "https://fast.wistia.com/embed/medias/54emumh5yf.m3u8"},
-            {"title": "Sets in Python", "url": "https://fast.wistia.com/embed/medias/v0xrrkefuz.m3u8"},
-            {"title": "Set Methods", "url": "https://fast.wistia.com/embed/medias/mpsi6e41su.m3u8"},
-            {"title": "Practice Problem (Part a & b)", "url": "https://fast.wistia.com/embed/medias/vce9s2rns9.m3u8"},
-            {"title": "Practice Problem (Part c)", "url": "https://fast.wistia.com/embed/medias/m4qmhpnm1u.m3u8"},
-            {"title": "What is Object Oriented Programming?", "url": "https://fast.wistia.com/embed/medias/k39rkw3xp1.m3u8"},
-            {"title": "Classes & Objects", "url": "https://fast.wistia.com/embed/medias/vw3b286wyw.m3u8"},
-            {"title": "Attributes & Methods", "url": "https://fast.wistia.com/embed/medias/pjap31z8gw.m3u8"},
-            {"title": "Constructor - init( ) Method", "url": "https://fast.wistia.com/embed/medias/df6tlth3mb.m3u8"},
-            {"title": "Types of Constructors", "url": "https://fast.wistia.com/embed/medias/hxaqlsq524.m3u8"},
-            {"title": "Attributes - class & instance", "url": "https://fast.wistia.com/embed/medias/72osru30vz.m3u8"},
-            {"title": "Instance Methods", "url": "https://fast.wistia.com/embed/medias/18a8djxwyo.m3u8"},
-            {"title": "Class Methods", "url": "https://fast.wistia.com/embed/medias/5b3g65164h.m3u8"},
-            {"title": "Static Methods", "url": "https://fast.wistia.com/embed/medias/8yrqih9g4h.m3u8"},
-            {"title": "Practice Problem", "url": "https://fast.wistia.com/embed/medias/elrj0yduvu.m3u8"},
-            {"title": "Encapsulation in OOPs", "url": "https://fast.wistia.com/embed/medias/jpyim7eo4j.m3u8"},
-            {"title": "Inheritance in OOPs", "url": "https://fast.wistia.com/embed/medias/1bt77o9ytp.m3u8"},
-            {"title": "Types of Inheritance", "url": "https://fast.wistia.com/embed/medias/ezer7luj9u.m3u8"},
-            {"title": "Abstraction", "url": "https://fast.wistia.com/embed/medias/5nydgy6buu.m3u8"},
-            {"title": "Polymorphism (Function Overriding)", "url": "https://fast.wistia.com/embed/medias/5sj6a5f3cv.m3u8"},
-            {"title": "Polymorphism (Duck Typing)", "url": "https://fast.wistia.com/embed/medias/8tl255uzkj.m3u8"},
-            {"title": "File I/O", "url": "https://fast.wistia.com/embed/medias/33dnbl5iei.m3u8"},
-            {"title": "Operations on Files", "url": "https://fast.wistia.com/embed/medias/biq4liy3et.m3u8"},
-            {"title": "Modes in File Operations", "url": "https://fast.wistia.com/embed/medias/cyc8b3byc3.m3u8"},
-            {"title": "\"with\" Keyword", "url": "https://fast.wistia.com/embed/medias/h12ektwve8.m3u8"},
-            {"title": "Delete Files", "url": "https://fast.wistia.com/embed/medias/njkyy5q7av.m3u8"},
-            {"title": "Practice Problem", "url": "https://fast.wistia.com/embed/medias/cidy5sphq3.m3u8"},
-            {"title": "Exception Handling", "url": "https://fast.wistia.com/embed/medias/9ecaznp59j.m3u8"},
-            {"title": "\"finally\" Keyword", "url": "https://fast.wistia.com/embed/medias/ik5xvv8xnb.m3u8"},
-            {"title": "List Comprehensions", "url": "https://fast.wistia.com/embed/medias/1soiyhqh3o.m3u8"},
-            {"title": "Working with JSON Module", "url": "https://fast.wistia.com/embed/medias/94cfnqn6cl.m3u8"},
-            {"title": "Installing Anaconda", "url": "https://fast.wistia.com/embed/medias/kgvtfjnsxq.m3u8"},
-            {"title": "Conda Prompt", "url": "https://fast.wistia.com/embed/medias/hiuxe2bdoh.m3u8"},
-            {"title": "Installing Jupyter Notebook", "url": "https://fast.wistia.com/embed/medias/zmt8jvss6a.m3u8"},
-            {"title": "Installing Jupyter Lab", "url": "https://fast.wistia.com/embed/medias/io4jfpg4t2.m3u8"},
-            {"title": "Thinking in Terms of Data", "url": "https://fast.wistia.com/embed/medias/3dmcy5ib1g.m3u8"},
-            {"title": "Getting started", "url": "https://fast.wistia.com/embed/medias/2jsshhyuf4.m3u8"},
-            {"title": "Set up JSON data", "url": "https://fast.wistia.com/embed/medias/rcvltjfx8g.m3u8"},
-            {"title": "Amazon Store : Clean & Structure Data", "url": "https://fast.wistia.com/embed/medias/814hbm1xx2.m3u8"},
-            {"title": "Amazon Store : Meaningful Insights", "url": "https://fast.wistia.com/embed/medias/zm95r9gk2s.m3u8"},
-            {"title": "Amazon Store : Recommendation Feature", "url": "https://fast.wistia.com/embed/medias/apdtleee5m.m3u8"},
-            {"title": "Introduction to NumPy", "url": "https://fast.wistia.com/embed/medias/69ke3d9r5b.m3u8"},
-            {"title": "Installation & Usage", "url": "https://fast.wistia.com/embed/medias/0menrb8d5d.m3u8"},
-            {"title": "Python List vs NumPy Array", "url": "https://fast.wistia.com/embed/medias/t9b19y4v48.m3u8"},
-            {"title": "Creating Arrays from Lists", "url": "https://fast.wistia.com/embed/medias/ju2ddr2nv8.m3u8"},
-            {"title": "Creating Arrays (using built-in methods)", "url": "https://fast.wistia.com/embed/medias/5iplmxxil7.m3u8"},
-            {"title": "Array Properties", "url": "https://fast.wistia.com/embed/medias/ztadlc3ksd.m3u8"},
-            {"title": "Reshaping Arrays", "url": "https://fast.wistia.com/embed/medias/g43xyemepf.m3u8"},
-            {"title": "Indexing on Arrays", "url": "https://fast.wistia.com/embed/medias/dtkfnodj4o.m3u8"},
-            {"title": "Slicing Arrays", "url": "https://fast.wistia.com/embed/medias/pwy2sg1iqc.m3u8"},
-            {"title": "Copy v/s View in Slice", "url": "https://fast.wistia.com/embed/medias/k6ce5wn9m2.m3u8"},
-            {"title": "Common NumPy Data Types", "url": "https://fast.wistia.com/embed/medias/a1ps6mwmr6.m3u8"},
-            {"title": "Multi-dimensional Arrays & Axes", "url": "https://fast.wistia.com/embed/medias/rg5p1u4tgt.m3u8"},
-            {"title": "3D Arrays", "url": "https://fast.wistia.com/embed/medias/ci3dcxj6xf.m3u8"},
-            {"title": "Vectorization & Broadcasting", "url": "https://fast.wistia.com/embed/medias/ucepob2tq7.m3u8"},
-            {"title": "Vector Normalization", "url": "https://fast.wistia.com/embed/medias/r2i7jhccv9.m3u8"},
-            {"title": "Math - Mean & Standard Deviation", "url": "https://fast.wistia.com/embed/medias/0aediq7ff3.m3u8"},
-            {"title": "Mathematical Functions (Aggregate)", "url": "https://fast.wistia.com/embed/medias/jt3b28xt4c.m3u8"},
-            {"title": "Other Math functions", "url": "https://fast.wistia.com/embed/medias/xjpk2xy5gu.m3u8"},
-            {"title": "Data Science Process", "url": "https://fast.wistia.com/embed/medias/1z0ficbm8j.m3u8"},
-            {"title": "What is EDA?", "url": "https://fast.wistia.com/embed/medias/qhkv6bi8my.m3u8"},
-            {"title": "Introduction to Pandas", "url": "https://fast.wistia.com/embed/medias/l64bki74v7.m3u8"},
-            {"title": "Series in Pandas", "url": "https://fast.wistia.com/embed/medias/2qdc3hm8a2.m3u8"},
-            {"title": "Series Properties", "url": "https://fast.wistia.com/embed/medias/4l1adodv9j.m3u8"},
-            {"title": "DataFrame in Pandas", "url": "https://fast.wistia.com/embed/medias/1q0o36kt6e.m3u8"},
-            {"title": "Pandas with csv & json data - give file", "url": "https://fast.wistia.com/embed/medias/6qgp6l51mo.m3u8"},
-            {"title": "DataFrame Methods", "url": "https://fast.wistia.com/embed/medias/3encmmjkep.m3u8"},
-            {"title": "Using Kaggle DataSet", "url": "https://fast.wistia.com/embed/medias/820htqg30a.m3u8"},
-            {"title": "Indexing & Selecting Data", "url": "https://fast.wistia.com/embed/medias/3cvhes7ek1.m3u8"},
-            {"title": "Filtering Data", "url": "https://fast.wistia.com/embed/medias/vb6u2xyoxq.m3u8"},
-            {"title": "Filtering Data using Query", "url": "https://fast.wistia.com/embed/medias/6uz8fq9j2m.m3u8"},
-            {"title": "Data Cleaning (Handle Missing Values) - give file", "url": "https://fast.wistia.com/embed/medias/goujt5w5sk.m3u8"},
-            {"title": "Data Cleaning (Handle Duplicates)", "url": "https://fast.wistia.com/embed/medias/73fb5w9b4v.m3u8"},
-            {"title": "Data Cleaning (Handle Data Types)", "url": "https://fast.wistia.com/embed/medias/64dmeq7zwy.m3u8"},
-            {"title": "Data Cleaning (Handle Strings)", "url": "https://fast.wistia.com/embed/medias/7jipbe29ri.m3u8"},
-            {"title": "Data Transformation", "url": "https://fast.wistia.com/embed/medias/vhcexlqmj3.m3u8"},
-            {"title": "Data Transformation (other Methods)", "url": "https://fast.wistia.com/embed/medias/3ybev5ysir.m3u8"},
-            {"title": "Practice Task", "url": "https://fast.wistia.com/embed/medias/6xzs5e3qfy.m3u8"},
-            {"title": "Writing data to csv & json files", "url": "https://fast.wistia.com/embed/medias/zebkuoje73.m3u8"},
-            {"title": "Group by & Aggregation", "url": "https://fast.wistia.com/embed/medias/nfq4x38bsv.m3u8"},
-            {"title": "Melt & Pivot for Reshaping", "url": "https://fast.wistia.com/embed/medias/5vj659ivt2.m3u8"},
-            {"title": "Basic Visualization with Pandas", "url": "https://fast.wistia.com/embed/medias/8dpl7ms1f0.m3u8"},
-            {"title": "Merge & Join Data", "url": "https://fast.wistia.com/embed/medias/jr7v7mkovw.m3u8"},
-            {"title": "Data Concatenation with Pandas", "url": "https://fast.wistia.com/embed/medias/xr85srv6ay.m3u8"},
-            {"title": "What is Data Collection?", "url": "https://fast.wistia.com/embed/medias/o0m4sw46g6.m3u8"},
-            {"title": "Multiple Sources for Data Science", "url": "https://fast.wistia.com/embed/medias/8gbtdvgtid.m3u8"},
-            {"title": "Starting with SQL", "url": "https://fast.wistia.com/embed/medias/9ebyzzrrqw.m3u8"},
-            {"title": "What is a Database?", "url": "https://fast.wistia.com/embed/medias/3xucxtgby3.m3u8"},
-            {"title": "SQL v/s NoSQL", "url": "https://fast.wistia.com/embed/medias/s9a8u673mw.m3u8"},
-            {"title": "What is SQL?", "url": "https://fast.wistia.com/embed/medias/793ipq2iuw.m3u8"},
-            {"title": "What is a Table?", "url": "https://fast.wistia.com/embed/medias/lxeejarp76.m3u8"},
-            {"title": "(For Windows) Installation", "url": "https://fast.wistia.com/embed/medias/2nh1p6u7jz.m3u8"},
-            {"title": "(For Mac) Installation", "url": "https://fast.wistia.com/embed/medias/ethzgmrbq0.m3u8"},
-            {"title": "Our First Database", "url": "https://fast.wistia.com/embed/medias/5dn6hvuoxl.m3u8"},
-            {"title": "Our First Table", "url": "https://fast.wistia.com/embed/medias/c2gdr7hbfr.m3u8"},
-            {"title": "Database Queries", "url": "https://fast.wistia.com/embed/medias/cqa217c5am.m3u8"},
-            {"title": "CREATE Table", "url": "https://fast.wistia.com/embed/medias/3bunslv7hc.m3u8"},
-            {"title": "What are Constraints?", "url": "https://fast.wistia.com/embed/medias/dl3kh32y7w.m3u8"},
-            {"title": "Key Constraints", "url": "https://fast.wistia.com/embed/medias/6zmwtojttd.m3u8"},
-            {"title": "Primary & Foreign Keys", "url": "https://fast.wistia.com/embed/medias/yiun5r13e9.m3u8"},
-            {"title": "INSERT into Table", "url": "https://fast.wistia.com/embed/medias/7b0k1806m5.m3u8"},
-            {"title": "SELECT Command", "url": "https://fast.wistia.com/embed/medias/4ay8nusd4e.m3u8"},
-            {"title": "Where Clause", "url": "https://fast.wistia.com/embed/medias/g6u80y1d0g.m3u8"},
-            {"title": "Operators in Where", "url": "https://fast.wistia.com/embed/medias/hz5dwqmzds.m3u8"},
-            {"title": "Frequently Used Operators", "url": "https://fast.wistia.com/embed/medias/jagv8ip4q9.m3u8"},
-            {"title": "Limit Clause", "url": "https://fast.wistia.com/embed/medias/u4oxxgb6ee.m3u8"},
-            {"title": "Order By Clause", "url": "https://fast.wistia.com/embed/medias/3pv6q0wp45.m3u8"},
-            {"title": "Aggregate Functions", "url": "https://fast.wistia.com/embed/medias/i11istkr7l.m3u8"},
-            {"title": "Group By Clause", "url": "https://fast.wistia.com/embed/medias/4p4jplamxc.m3u8"},
-            {"title": "Having Clause", "url": "https://fast.wistia.com/embed/medias/223x6qmada.m3u8"},
-            {"title": "General Order", "url": "https://fast.wistia.com/embed/medias/03cqd2c9px.m3u8"},
-            {"title": "UPDATE Table", "url": "https://fast.wistia.com/embed/medias/osofyniutv.m3u8"},
-            {"title": "DELETE Table", "url": "https://fast.wistia.com/embed/medias/dwb8vohf8n.m3u8"},
-            {"title": "ALTER Table", "url": "https://fast.wistia.com/embed/medias/1ku8gmpxoq.m3u8"},
-            {"title": "TRUNCATE Table", "url": "https://fast.wistia.com/embed/medias/386dryn9cl.m3u8"},
-            {"title": "Practice Set 1", "url": "https://fast.wistia.com/embed/medias/qwlsckm81d.m3u8"},
-            {"title": "Practice Set 2", "url": "https://fast.wistia.com/embed/medias/i5clyb95v6.m3u8"},
-            {"title": "Transactions & ACID Properties", "url": "https://fast.wistia.com/embed/medias/bh8b4ti9xf.m3u8"},
-            {"title": "Commit in Transactions", "url": "https://fast.wistia.com/embed/medias/7iqpgquce6.m3u8"},
-            {"title": "Rollbacks & Savepoints", "url": "https://fast.wistia.com/embed/medias/bsq75tl16o.m3u8"},
-            {"title": "JOINs in SQL (Inner Join)", "url": "https://fast.wistia.com/embed/medias/1auo175nsj.m3u8"},
-            {"title": "Left Join & Right Join", "url": "https://fast.wistia.com/embed/medias/bkxa0cylk4.m3u8"},
-            {"title": "Outer Join & Cross Join", "url": "https://fast.wistia.com/embed/medias/7c49y8yy9z.m3u8"},
-            {"title": "Self Join", "url": "https://fast.wistia.com/embed/medias/fbxp2449n5.m3u8"},
-            {"title": "Practice Problem - Exclusive Joins", "url": "https://fast.wistia.com/embed/medias/eql4qg21im.m3u8"},
-            {"title": "Sub-Queries in SQL", "url": "https://fast.wistia.com/embed/medias/2wz2imjy0g.m3u8"},
-            {"title": "Views in SQL", "url": "https://fast.wistia.com/embed/medias/ce89u977jm.m3u8"},
-            {"title": "Index in SQL", "url": "https://fast.wistia.com/embed/medias/k5qbyrvgf1.m3u8"},
-            {"title": "Composite Index", "url": "https://fast.wistia.com/embed/medias/wbwrmub0dj.m3u8"},
-            {"title": "Stored Procedures", "url": "https://fast.wistia.com/embed/medias/5hrqbfl6up.m3u8"},
-            {"title": "Call & Drop Procedures", "url": "https://fast.wistia.com/embed/medias/7p9zu3vvk3.m3u8"},
-            {"title": "Population Techniques (Recap)", "url": "https://fast.wistia.com/embed/medias/8ummo0chxk.m3u8"},
-            {"title": "Working with APIs", "url": "https://fast.wistia.com/embed/medias/qcs8cinsza.m3u8"},
-            {"title": "Homework Problem", "url": "https://fast.wistia.com/embed/medias/zkhqhpwbw6.m3u8"},
-            {"title": "Starting with Web Scraping", "url": "https://fast.wistia.com/embed/medias/nrghkg1pwb.m3u8"},
-            {"title": "HTML Overview", "url": "https://fast.wistia.com/embed/medias/ct8shy7y5q.m3u8"},
-            {"title": "Important Tags in HTML", "url": "https://fast.wistia.com/embed/medias/r577zytuwo.m3u8"},
-            {"title": "Attributes in HTML", "url": "https://fast.wistia.com/embed/medias/5us1301qjp.m3u8"},
-            {"title": "Web Scraping (requests Library)", "url": "https://fast.wistia.com/embed/medias/mh739mvdds.m3u8"},
-            {"title": "Additional Techniques", "url": "https://fast.wistia.com/embed/medias/pqquortnku.m3u8"},
-            {"title": "Web Scraping (using BeautifulSoup)", "url": "https://fast.wistia.com/embed/medias/uyeq1zbo34.m3u8"},
-            {"title": "BeautifulSoup Methods & Attributes", "url": "https://fast.wistia.com/embed/medias/e9qy6amxw7.m3u8"},
-            {"title": "Storing Collected Data", "url": "https://fast.wistia.com/embed/medias/bcllvvjhux.m3u8"},
-            {"title": "Introduction to HTML", "url": "https://fast.wistia.com/embed/medias/qxbvokwmqj.m3u8"},
-            {"title": "HTML Elements & Tags", "url": "https://fast.wistia.com/embed/medias/9ifsi19vbr.m3u8"},
-            {"title": "Hello World", "url": "https://fast.wistia.com/embed/medias/fp2h3r3nvu.m3u8"},
-            {"title": "Paragraph Element", "url": "https://fast.wistia.com/embed/medias/g9na6rypsh.m3u8"},
-            {"title": "Heading Elements", "url": "https://fast.wistia.com/embed/medias/sobe72tnxk.m3u8"},
-            {"title": "Practice Qs (Level1A)", "url": "https://fast.wistia.com/embed/medias/cfoqf4a3hc.m3u8"},
-            {"title": "Boilerplate Code", "url": "https://fast.wistia.com/embed/medias/t51tsv4qzq.m3u8"},
-            {"title": "Lists in HTML", "url": "https://fast.wistia.com/embed/medias/vw5us5aovy.m3u8"},
-            {"title": "Attributes in HTML", "url": "https://fast.wistia.com/embed/medias/bpffcphcpm.m3u8"},
-            {"title": "Anchor Element", "url": "https://fast.wistia.com/embed/medias/bp0yxwp6ec.m3u8"},
-            {"title": "Image Element", "url": "https://fast.wistia.com/embed/medias/6huct4z3gr.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/9t250om9ez.m3u8"},
-            {"title": "More HTML Tags", "url": "https://fast.wistia.com/embed/medias/cdy348g59o.m3u8"},
-            {"title": "Comments in HTML", "url": "https://fast.wistia.com/embed/medias/3pi93h105v.m3u8"},
-            {"title": "Is HTML Case Sensitive?", "url": "https://fast.wistia.com/embed/medias/g5mlw0qcsu.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/danqem6ygu.m3u8"},
-            {"title": "Inline v/s Block", "url": "https://fast.wistia.com/embed/medias/7oowvmgcal.m3u8"},
-            {"title": "Div Element", "url": "https://fast.wistia.com/embed/medias/d8z01byr2y.m3u8"},
-            {"title": "Span Element", "url": "https://fast.wistia.com/embed/medias/3iel3ki50u.m3u8"},
-            {"title": "Hr Tag", "url": "https://fast.wistia.com/embed/medias/irg61p1y6j.m3u8"},
-            {"title": "Sup & Sub Tags", "url": "https://fast.wistia.com/embed/medias/3q1oq3tkzi.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/in3zq099r2.m3u8"},
-            {"title": "Semantic Markup", "url": "https://fast.wistia.com/embed/medias/u4f772478e.m3u8"},
-            {"title": "Semantic Tags", "url": "https://fast.wistia.com/embed/medias/1aubc783az.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/lnmjqscmau.m3u8"},
-            {"title": "HTML Entities", "url": "https://fast.wistia.com/embed/medias/6x68liv18j.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/panzbsb5d6.m3u8"},
-            {"title": "Emmets", "url": "https://fast.wistia.com/embed/medias/oeylvd5qgx.m3u8"},
-            {"title": "Further Understanding HTML", "url": "https://fast.wistia.com/embed/medias/0df8zr5u37.m3u8"},
-            {"title": "Tables in HTML", "url": "https://fast.wistia.com/embed/medias/3hvrosdm8f.m3u8"},
-            {"title": "Semantics in Tables", "url": "https://fast.wistia.com/embed/medias/9hj8qvduqg.m3u8"},
-            {"title": "Colspan & Rowspan Attributes", "url": "https://fast.wistia.com/embed/medias/y3fba8sjfj.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/v5xwozhqwu.m3u8"},
-            {"title": "Forms in HTML", "url": "https://fast.wistia.com/embed/medias/wqzoijwsmu.m3u8"},
-            {"title": "Input - Form Element", "url": "https://fast.wistia.com/embed/medias/9t4nndd5hn.m3u8"},
-            {"title": "Placeholders & Labels", "url": "https://fast.wistia.com/embed/medias/x9fphbckn0.m3u8"},
-            {"title": "Button Element", "url": "https://fast.wistia.com/embed/medias/wtl2o0wcx0.m3u8"},
-            {"title": "Name Attribute", "url": "https://fast.wistia.com/embed/medias/n5jeloaqqb.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/ld7h6159vx.m3u8"},
-            {"title": "Checkbox - Input Element", "url": "https://fast.wistia.com/embed/medias/34d4owbgi6.m3u8"},
-            {"title": "Radio - Input Element", "url": "https://fast.wistia.com/embed/medias/1wh0t07j78.m3u8"},
-            {"title": "Select - Input Element", "url": "https://fast.wistia.com/embed/medias/kz09bpvkds.m3u8"},
-            {"title": "Range - Input Element", "url": "https://fast.wistia.com/embed/medias/l7ei4jbh8a.m3u8"},
-            {"title": "Text Area", "url": "https://fast.wistia.com/embed/medias/d5zkf46pzf.m3u8"},
-            {"title": "Practice Qs", "url": "https://fast.wistia.com/embed/medias/4kxssr644i.m3u8"},
-            {"title": "Solution - Part 1", "url": "https://fast.wistia.com/embed/medias/kqljvfc65h.m3u8"},
-            {"title": "Solution - Part 2", "url": "https://fast.wistia.com/embed/medias/5xrfqzdiiy.m3u8"},
-            {"title": "What is Data Visualization?", "url": "https://fast.wistia.com/embed/medias/fsgb33n371.m3u8"},
-            {"title": "How to Plot data?", "url": "https://fast.wistia.com/embed/medias/1cb6l0dkfo.m3u8"},
-            {"title": "Introduction to Matplotlib", "url": "https://fast.wistia.com/embed/medias/s6wkhkyr85.m3u8"},
-            {"title": "Important Plot Methods", "url": "https://fast.wistia.com/embed/medias/6lvuyhlwn9.m3u8"},
-            {"title": "Multiple datasets on Line Plot", "url": "https://fast.wistia.com/embed/medias/wons0ygx7u.m3u8"},
-            {"title": "Format Strings", "url": "https://fast.wistia.com/embed/medias/50mcx3772c.m3u8"},
-            {"title": "Styling & Saving Plots", "url": "https://fast.wistia.com/embed/medias/xu2b5sgkq2.m3u8"},
-            {"title": "Common Plots & Charts", "url": "https://fast.wistia.com/embed/medias/80urc4ufqp.m3u8"},
-            {"title": "Bar Charts (Vertical)", "url": "https://fast.wistia.com/embed/medias/lkgestw0gk.m3u8"},
-            {"title": "Add Bar labels", "url": "https://fast.wistia.com/embed/medias/zmy5z3z0hn.m3u8"},
-            {"title": "Multiple datasets on Bar Chart", "url": "https://fast.wistia.com/embed/medias/stkwa1obt6.m3u8"},
-            {"title": "Bar Charts (Horizontal)", "url": "https://fast.wistia.com/embed/medias/0n9y2k1d8p.m3u8"},
-            {"title": "Scatter Plots", "url": "https://fast.wistia.com/embed/medias/otbqe2atra.m3u8"},
-            {"title": "Customizations on Scatter Plots", "url": "https://fast.wistia.com/embed/medias/7jfdpfi452.m3u8"},
-            {"title": "Add Annotations", "url": "https://fast.wistia.com/embed/medias/p30tfvnzzm.m3u8"},
-            {"title": "Multiple datasets on Scatter Plots", "url": "https://fast.wistia.com/embed/medias/qy5c1imdps.m3u8"},
-            {"title": "Pie Charts", "url": "https://fast.wistia.com/embed/medias/kln5qlj9uv.m3u8"},
-            {"title": "Customizations on Pie Charts", "url": "https://fast.wistia.com/embed/medias/s02iun4x64.m3u8"},
-            {"title": "Histograms", "url": "https://fast.wistia.com/embed/medias/bkixz97yry.m3u8"},
-            {"title": "Multiple datasets on Histogram", "url": "https://fast.wistia.com/embed/medias/q165wtmntr.m3u8"},
-            {"title": "axvline in Histogram", "url": "https://fast.wistia.com/embed/medias/xle06as0is.m3u8"},
-            {"title": "Box Plots", "url": "https://fast.wistia.com/embed/medias/x88hc13ngl.m3u8"},
-            {"title": "Operations on Box Plot", "url": "https://fast.wistia.com/embed/medias/3ud690pcnh.m3u8"},
-            {"title": "Stack Plots", "url": "https://fast.wistia.com/embed/medias/k1uvqy769h.m3u8"},
-            {"title": "Subplots", "url": "https://fast.wistia.com/embed/medias/azkde4x0nb.m3u8"},
-            {"title": "Modern Matplotlib", "url": "https://fast.wistia.com/embed/medias/p8o7bwiv3f.m3u8"},
-            {"title": "Practice Task (Weekly Temperature)", "url": "https://fast.wistia.com/embed/medias/v2uqvhxvwo.m3u8"},
-            {"title": "Introduction to Seaborn", "url": "https://fast.wistia.com/embed/medias/dmh7foaora.m3u8"},
-            {"title": "Creating Plots with Seaborn", "url": "https://fast.wistia.com/embed/medias/70mph2luk6.m3u8"},
-            {"title": "Relational Plots in Seaborn", "url": "https://fast.wistia.com/embed/medias/edk3anytnd.m3u8"},
-            {"title": "Categorical Plots in Seaborn", "url": "https://fast.wistia.com/embed/medias/8onvo7itic.m3u8"},
-            {"title": "Distribution Plots in Seaborn", "url": "https://fast.wistia.com/embed/medias/g9if89xtly.m3u8"},
-            {"title": "Relational Plots in Seaborn - Heatmaps", "url": "https://fast.wistia.com/embed/medias/bwaqjkm5ry.m3u8"},
-            {"title": "Best Practices for Data Visualization", "url": "https://fast.wistia.com/embed/medias/3hoymm8c4u.m3u8"},
-            {"title": "Math for AI", "url": "https://fast.wistia.com/embed/medias/qfe9qdt7bv.m3u8"},
-            {"title": "Understanding Probability", "url": "https://fast.wistia.com/embed/medias/8fu5wl4lmw.m3u8"},
-            {"title": "Probability Examples", "url": "https://fast.wistia.com/embed/medias/kk7mlt67pd.m3u8"},
-            {"title": "Solving Practice Problems", "url": "https://fast.wistia.com/embed/medias/6e3b1n3zzv.m3u8"},
-            {"title": "Types of Events", "url": "https://fast.wistia.com/embed/medias/qzhbrxie0c.m3u8"},
-            {"title": "Complementary Rule", "url": "https://fast.wistia.com/embed/medias/kqpfw9emj2.m3u8"},
-            {"title": "Addition Rule", "url": "https://fast.wistia.com/embed/medias/h8k41w3vvp.m3u8"},
-            {"title": "Multiplication Rule", "url": "https://fast.wistia.com/embed/medias/83djtjjdv6.m3u8"},
-            {"title": "Solving Practice Problems", "url": "https://fast.wistia.com/embed/medias/2dvvxnfa4o.m3u8"},
-            {"title": "Conditional Probability", "url": "https://fast.wistia.com/embed/medias/dkib564s1r.m3u8"},
-            {"title": "Law of Total Probability", "url": "https://fast.wistia.com/embed/medias/pm57f6vzv2.m3u8"},
-            {"title": "Bayes' Theorem", "url": "https://fast.wistia.com/embed/medias/guqdjig197.m3u8"},
-            {"title": "Solving Practice Problem", "url": "https://fast.wistia.com/embed/medias/0uslddrroc.m3u8"},
-            {"title": "Random Variables", "url": "https://fast.wistia.com/embed/medias/g8z7zat626.m3u8"},
-            {"title": "Mean, Median & Mode", "url": "https://fast.wistia.com/embed/medias/o1xnxuai7m.m3u8"},
-            {"title": "Variance & Standard Deviation", "url": "https://fast.wistia.com/embed/medias/3tmawleeb0.m3u8"},
-            {"title": "Probability Distributions & its Types", "url": "https://fast.wistia.com/embed/medias/bo89msmd5k.m3u8"},
-            {"title": "Binomial Distribution", "url": "https://fast.wistia.com/embed/medias/a8d4e6c2gu.m3u8"},
-            {"title": "Uniform Distribution", "url": "https://fast.wistia.com/embed/medias/9y2qlcbac2.m3u8"},
-            {"title": "Normal Distribution", "url": "https://fast.wistia.com/embed/medias/ed49901v3y.m3u8"},
-            {"title": "Central Limit Theorem", "url": "https://fast.wistia.com/embed/medias/73737ydpl4.m3u8"},
-            {"title": "Introduction to Linear Algebra", "url": "https://fast.wistia.com/embed/medias/rk80unxzv2.m3u8"},
-            {"title": "Straight Lines", "url": "https://fast.wistia.com/embed/medias/f4kfc9t6ul.m3u8"},
-            {"title": "Distance between 2 Points", "url": "https://fast.wistia.com/embed/medias/ipqrjhmdas.m3u8"},
-            {"title": "Parallel & Perpendicular Lines", "url": "https://fast.wistia.com/embed/medias/ojs9wfb2wa.m3u8"},
-            {"title": "Distance between Parallel Lines", "url": "https://fast.wistia.com/embed/medias/bspkggeup7.m3u8"},
-            {"title": "Practice Problem", "url": "https://fast.wistia.com/embed/medias/bvyhymkmfq.m3u8"},
-            {"title": "Vectors", "url": "https://fast.wistia.com/embed/medias/dzy41qzk6u.m3u8"},
-            {"title": "Vector Addition", "url": "https://fast.wistia.com/embed/medias/hodyf3it2c.m3u8"},
-            {"title": "Scalar Multiplication", "url": "https://fast.wistia.com/embed/medias/jrgc0od12d.m3u8"},
-            {"title": "Dot Product", "url": "https://fast.wistia.com/embed/medias/ivy3kgq23s.m3u8"},
-            {"title": "Cross Product", "url": "https://fast.wistia.com/embed/medias/tofnbpjrvb.m3u8"},
-            {"title": "Matrix", "url": "https://fast.wistia.com/embed/medias/o4zi0lkedn.m3u8"},
-            {"title": "Operations on Matrices", "url": "https://fast.wistia.com/embed/medias/gm91ue1zyu.m3u8"},
-            {"title": "Determinants", "url": "https://fast.wistia.com/embed/medias/61mk4h9a2w.m3u8"},
-            {"title": "Eigen Vectors & Eigen Values", "url": "https://fast.wistia.com/embed/medias/b70zkpx5dl.m3u8"},
-            {"title": "Calculus Introduction", "url": "https://fast.wistia.com/embed/medias/jycobe27zg.m3u8"},
-            {"title": "Functions", "url": "https://fast.wistia.com/embed/medias/plqq2czrkk.m3u8"},
-            {"title": "Composite Functions", "url": "https://fast.wistia.com/embed/medias/hhrnhm1g1s.m3u8"},
-            {"title": "Functions: Scalar Multiplication & Addition", "url": "https://fast.wistia.com/embed/medias/f4djgcsu78.m3u8"},
-            {"title": "Input: Scalar Multiplication & Addition", "url": "https://fast.wistia.com/embed/medias/9lqwemfxtb.m3u8"},
-            {"title": "Differentiation", "url": "https://fast.wistia.com/embed/medias/ipj7k47qh5.m3u8"},
-            {"title": "Differentiation Rules", "url": "https://fast.wistia.com/embed/medias/a0xhfm1ody.m3u8"},
-            {"title": "Finding Minima / Maxima", "url": "https://fast.wistia.com/embed/medias/gs6c29o9yn.m3u8"},
-            {"title": "Practice Problem", "url": "https://fast.wistia.com/embed/medias/kjnr01wzv4.m3u8"},
-            {"title": "Introduction to Machine Learning", "url": "https://fast.wistia.com/embed/medias/qx5qawigg9.m3u8"},
-            {"title": "Types of ML (Supervised)", "url": "https://fast.wistia.com/embed/medias/ib5b88gsqv.m3u8"},
-            {"title": "Types of ML (Unsupervised & RL)", "url": "https://fast.wistia.com/embed/medias/wrj2evavqr.m3u8"},
-            {"title": "Supervised Machine Learning", "url": "https://fast.wistia.com/embed/medias/3tgjmvprll.m3u8"},
-            {"title": "Regression & Classification", "url": "https://fast.wistia.com/embed/medias/lnjvopovck.m3u8"},
-            {"title": "Introduction to sklearn", "url": "https://fast.wistia.com/embed/medias/84e01xmr0x.m3u8"},
-            {"title": "Linear Regression (Algorithm 1)", "url": "https://fast.wistia.com/embed/medias/oz5drkelx5.m3u8"},
-            {"title": "What is Best Fit Line?", "url": "https://fast.wistia.com/embed/medias/6wgx3aesyc.m3u8"},
-            {"title": "What is Cost Function?", "url": "https://fast.wistia.com/embed/medias/1xccx3m4aa.m3u8"},
-            {"title": "Understanding Cost Function Curve", "url": "https://fast.wistia.com/embed/medias/vxwuzbq36n.m3u8"},
-            {"title": "What is Gradient Descent?", "url": "https://fast.wistia.com/embed/medias/t2s7o2a9jb.m3u8"},
-            {"title": "Summary", "url": "https://fast.wistia.com/embed/medias/ycupkq2ui6.m3u8"},
-            {"title": "Linear Regression (Code)", "url": "https://fast.wistia.com/embed/medias/1no4kf84pq.m3u8"},
-            {"title": "Regression Evaluation Metrics", "url": "https://fast.wistia.com/embed/medias/9fri9qy0w4.m3u8"},
-            {"title": "Feature Engineering - Encoding", "url": "https://fast.wistia.com/embed/medias/v9gutn2md7.m3u8"},
-            {"title": "Dummy Variable Trap", "url": "https://fast.wistia.com/embed/medias/c10ef2yjv2.m3u8"},
-            {"title": "Other FE Techniques", "url": "https://fast.wistia.com/embed/medias/ywlfhbnnmb.m3u8"},
-            {"title": "Overfitting", "url": "https://fast.wistia.com/embed/medias/s5e98o9alt.m3u8"},
-            {"title": "Underfitting", "url": "https://fast.wistia.com/embed/medias/20t8yr3vxf.m3u8"},
-            {"title": "How to fix Underfit & Overfit?", "url": "https://fast.wistia.com/embed/medias/btdr90kjlk.m3u8"},
-            {"title": "Is Model underfitting or overfitting?", "url": "https://fast.wistia.com/embed/medias/z3ak2qqujt.m3u8"},
-            {"title": "Regularization (Lasso Regression)", "url": "https://fast.wistia.com/embed/medias/2kt6jfc5n2.m3u8"},
-            {"title": "Regularization (Ridge Regression)", "url": "https://fast.wistia.com/embed/medias/92hbp3mhp7.m3u8"},
-            {"title": "Lasso Regression (Algorithm 2)", "url": "https://fast.wistia.com/embed/medias/gyxot195uy.m3u8"},
-            {"title": "Using LassoCV", "url": "https://fast.wistia.com/embed/medias/fthwzvo8ws.m3u8"},
-            {"title": "ElasticNet Overview", "url": "https://fast.wistia.com/embed/medias/ck27i3kt5o.m3u8"},
-            {"title": "Logistic Regression (Algorithm 3)", "url": "https://fast.wistia.com/embed/medias/ixp54smrne.m3u8"},
-            {"title": "Logistic Regression (Cost Fnx)", "url": "https://fast.wistia.com/embed/medias/49nn4vgjnv.m3u8"},
-            {"title": "Logistic Regression (Code)", "url": "https://fast.wistia.com/embed/medias/1vi8awgyhp.m3u8"},
-            {"title": "Standardization & Normalization", "url": "https://fast.wistia.com/embed/medias/8ymh30lmd0.m3u8"},
-            {"title": "Using StandardScaler", "url": "https://fast.wistia.com/embed/medias/j0j1sqq4ci.m3u8"},
-            {"title": "Understanding Confusion Matrix", "url": "https://fast.wistia.com/embed/medias/vnwbw9fzzf.m3u8"},
-            {"title": "Classification Evaluation Metrics", "url": "https://fast.wistia.com/embed/medias/czzveqn2ib.m3u8"},
-            {"title": "Naive Bayes (Algorithm 4)", "url": "https://fast.wistia.com/embed/medias/obbr4kgv1o.m3u8"},
-            {"title": "Naive Bayes (Example)", "url": "https://fast.wistia.com/embed/medias/ft9d2yg5j9.m3u8"},
-            {"title": "Types of Naive Bayes", "url": "https://fast.wistia.com/embed/medias/oaa645eefd.m3u8"},
-            {"title": "Naive Bayes (Code)", "url": "https://fast.wistia.com/embed/medias/2puqgnvdto.m3u8"},
-            {"title": "kNN (Algorithm 5)", "url": "https://fast.wistia.com/embed/medias/191yb8rvqm.m3u8"},
-            {"title": "kNN (Code)", "url": "https://fast.wistia.com/embed/medias/m3g22of8ab.m3u8"},
-            {"title": "Limitations of kNN", "url": "https://fast.wistia.com/embed/medias/4qmt8wcxr0.m3u8"},
-            {"title": "What is Validation Data?", "url": "https://fast.wistia.com/embed/medias/ukeikil6ci.m3u8"},
-            {"title": "What is Cross Validation?", "url": "https://fast.wistia.com/embed/medias/vqwf45lkjb.m3u8"},
-            {"title": "CV for Hyperparameter Tuning", "url": "https://fast.wistia.com/embed/medias/jk3z8gk8q5.m3u8"},
-            {"title": "Pipeline in sklearn", "url": "https://fast.wistia.com/embed/medias/wwnk56e5ou.m3u8"},
-            {"title": "Section Introduction", "url": "https://fast.wistia.com/embed/medias/hgm58fhr7s.m3u8"},
-            {"title": "Linear Regression (with Gradient Descent)", "url": "https://fast.wistia.com/embed/medias/wz6ocv510z.m3u8"},
-            {"title": "LR with GD (Step1)", "url": "https://fast.wistia.com/embed/medias/lvdohjm71p.m3u8"},
-            {"title": "LR with GD (Step2)", "url": "https://fast.wistia.com/embed/medias/p0avl4la0a.m3u8"},
-            {"title": "LR with GD (Step3)", "url": "https://fast.wistia.com/embed/medias/bdwvf6zyx3.m3u8"},
-            {"title": "LR with GD (Step4)", "url": "https://fast.wistia.com/embed/medias/yaf10ptum1.m3u8"},
-            {"title": "Linear Regression (with OLS)", "url": "https://fast.wistia.com/embed/medias/rz2bgr3jzk.m3u8"},
-            {"title": "LR with Gradient Descent vs OLS", "url": "https://fast.wistia.com/embed/medias/gzv16psz6r.m3u8"},
-            {"title": "Logistic Regression (steps)", "url": "https://fast.wistia.com/embed/medias/lw182a7xqq.m3u8"},
-            {"title": "Logistic Regression Implementation", "url": "https://fast.wistia.com/embed/medias/bs2v1pa18g.m3u8"},
-            {"title": "KNN Classifier (steps)", "url": "https://fast.wistia.com/embed/medias/v2ozhw7un5.m3u8"},
-            {"title": "KNN Classifier Implementation", "url": "https://fast.wistia.com/embed/medias/n7080ypnue.m3u8"},
-            {"title": "Project Introduction", "url": "https://fast.wistia.com/embed/medias/7hc0guvyds.m3u8"},
-            {"title": "Handle Missing Data", "url": "https://fast.wistia.com/embed/medias/dua0el30tw.m3u8"},
-            {"title": "Exploratory Data Analysis (EDA)", "url": "https://fast.wistia.com/embed/medias/jd8sszc6nl.m3u8"},
-            {"title": "Feature Encoding", "url": "https://fast.wistia.com/embed/medias/0kluem08lj.m3u8"},
-            {"title": "Correlation Heatmap", "url": "https://fast.wistia.com/embed/medias/qjj8ui5xgy.m3u8"},
-            {"title": "Feature Scaling", "url": "https://fast.wistia.com/embed/medias/a79h4f5qbv.m3u8"},
-            {"title": "Model Training & Evaluation", "url": "https://fast.wistia.com/embed/medias/4n7s7w0az9.m3u8"},
-            {"title": "Feature Engineering to Improve Model", "url": "https://fast.wistia.com/embed/medias/1zkx97l0d3.m3u8"},
-            {"title": "Important Pointers", "url": "https://fast.wistia.com/embed/medias/8hv8scmoxu.m3u8"},
-            {"title": "Introduction to Decision Trees", "url": "https://fast.wistia.com/embed/medias/o8yvrua14l.m3u8"},
-            {"title": "Decision Tree Classifier", "url": "https://fast.wistia.com/embed/medias/sdjj1yalzy.m3u8"},
-            {"title": "Entropy (Impurity Metric)", "url": "https://fast.wistia.com/embed/medias/9q36cvjwp8.m3u8"},
-            {"title": "Gini Impurity", "url": "https://fast.wistia.com/embed/medias/o1gtb5w5ug.m3u8"},
-            {"title": "Entropy v/s Gini Impurity", "url": "https://fast.wistia.com/embed/medias/ec7185e5fg.m3u8"},
-            {"title": "Information Gain", "url": "https://fast.wistia.com/embed/medias/j27d1kb9fr.m3u8"},
-            {"title": "Pruning Decision Trees", "url": "https://fast.wistia.com/embed/medias/m5u7dong85.m3u8"},
-            {"title": "Common Pruning Rules", "url": "https://fast.wistia.com/embed/medias/hlvh5n687m.m3u8"},
-            {"title": "Decision Tree Classifier (Code)", "url": "https://fast.wistia.com/embed/medias/h3c73j4bjq.m3u8"},
-            {"title": "Pre-Pruning Implementation", "url": "https://fast.wistia.com/embed/medias/8szeizbmul.m3u8"},
-            {"title": "Post-Pruning Implementation", "url": "https://fast.wistia.com/embed/medias/y9ltrbihma.m3u8"},
-            {"title": "Decision Tree Regressor", "url": "https://fast.wistia.com/embed/medias/knqz0s7ay1.m3u8"},
-            {"title": "Variance Reduction", "url": "https://fast.wistia.com/embed/medias/3he706powi.m3u8"},
-            {"title": "Decision Tree Regressor (Code)", "url": "https://fast.wistia.com/embed/medias/fgq26hp73i.m3u8"},
-            {"title": "Introduction to SVM", "url": "https://fast.wistia.com/embed/medias/ww0kmze2fq.m3u8"},
-            {"title": "SVM Classifier (Intuition)", "url": "https://fast.wistia.com/embed/medias/70hxg2wpce.m3u8"},
-            {"title": "Classification Hyperparameters", "url": "https://fast.wistia.com/embed/medias/h6y10ka0xn.m3u8"},
-            {"title": "Kernel in SVM", "url": "https://fast.wistia.com/embed/medias/5lwz14f5as.m3u8"},
-            {"title": "Common Kernel Types", "url": "https://fast.wistia.com/embed/medias/hbe9rdd9dz.m3u8"},
-            {"title": "SVM Classifier (Code)", "url": "https://fast.wistia.com/embed/medias/t3o4dktcnj.m3u8"},
-            {"title": "SVM Regressor (Intuition)", "url": "https://fast.wistia.com/embed/medias/ricepg2agr.m3u8"},
-            {"title": "SVM Regressor (Code)", "url": "https://fast.wistia.com/embed/medias/tjpqa15cgb.m3u8"},
-            {"title": "GridSearchCV for Hyperparameters", "url": "https://fast.wistia.com/embed/medias/du9gzeozzl.m3u8"},
-            {"title": "LinearSVR v/s SVR", "url": "https://fast.wistia.com/embed/medias/jdcwr97pjy.m3u8"},
-            {"title": "Ensemble Learning", "url": "https://fast.wistia.com/embed/medias/m8ec7v88ex.m3u8"},
-            {"title": "What is Bagging?", "url": "https://fast.wistia.com/embed/medias/rr773smbql.m3u8"},
-            {"title": "What is Boosting?", "url": "https://fast.wistia.com/embed/medias/04z3clacya.m3u8"},
-            {"title": "Random Forest", "url": "https://fast.wistia.com/embed/medias/aj60xvxxny.m3u8"},
-            {"title": "Out Of Bag (OOB)", "url": "https://fast.wistia.com/embed/medias/7zntambr4g.m3u8"},
-            {"title": "Random Forest (Implementation)", "url": "https://fast.wistia.com/embed/medias/6n1ov4ab34.m3u8"},
-            {"title": "Decision Tree v/s Random Forest", "url": "https://fast.wistia.com/embed/medias/gdyzzo8oa1.m3u8"},
-            {"title": "Bagging Classifier & Regressor", "url": "https://fast.wistia.com/embed/medias/qekozq0j64.m3u8"},
-            {"title": "Gradient Boosting Regressor", "url": "https://fast.wistia.com/embed/medias/ox5beo1o19.m3u8"},
-            {"title": "GB Classifier (Intuition)", "url": "https://fast.wistia.com/embed/medias/c1ogo9ovva.m3u8"},
-            {"title": "GB Regressor (Code)", "url": "https://fast.wistia.com/embed/medias/sv1mtisd7v.m3u8"},
-            {"title": "GB Classifier (Code)", "url": "https://fast.wistia.com/embed/medias/178nlu5e9a.m3u8"},
-            {"title": "AdaBoost (Intuition)", "url": "https://fast.wistia.com/embed/medias/n54m144938.m3u8"},
-            {"title": "AdaBoost (Code)", "url": "https://fast.wistia.com/embed/medias/w9b3u7y5sp.m3u8"},
-            {"title": "Other Boosting Algorithms", "url": "https://fast.wistia.com/embed/medias/cpkjznj54b.m3u8"},
-            {"title": "XGBoost Code", "url": "https://fast.wistia.com/embed/medias/r2v7gvtzna.m3u8"},
-            {"title": "Homogenous v/s Heterogenous Ensemble", "url": "https://fast.wistia.com/embed/medias/85bf7iwtk9.m3u8"},
-            {"title": "Voting (Logic)", "url": "https://fast.wistia.com/embed/medias/qf6spiilgo.m3u8"},
-            {"title": "Voting (Code)", "url": "https://fast.wistia.com/embed/medias/lghig3ixqk.m3u8"},
-            {"title": "Stacking (Logic)", "url": "https://fast.wistia.com/embed/medias/q6br81tu65.m3u8"},
-            {"title": "What is Blending?", "url": "https://fast.wistia.com/embed/medias/n9j4iw6kw0.m3u8"},
-            {"title": "Stacking (Code)", "url": "https://fast.wistia.com/embed/medias/ojyceuwmle.m3u8"},
-            {"title": "ML (supervised, unsupervised & reinforcement learning)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Deep learning - Neural Networks & terminologies", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Perceptron", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "FNN, RNN & CNN architectures", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Transformer", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "PyTorch", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "GenAI (LLMs, NLP)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "RAG (Retrieval-Augmented Generation)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "GAN (Generative Adversarial Network)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Agentic AI", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "OpenAI APIs", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Flask (Development with AI)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Git & Github (Version Control)", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Docker", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "Kubernetes", "url": "https://fast.wistia.com/embed/medias/.m3u8"},
-            {"title": "+ multiple Projects", "url": "https://fast.wistia.com/embed/medias/.m3u8"}
+        // --- 1. OBFUSCATED DATA SOURCE ---
+        // Links are REMOVED. Only IDs remain.
+        // 't' = Title, 'i' = Video ID
+        const _SECURE_DB = [
+            {"t": "Orientation Session (Group1)", "i": "06tldonb8e"},
+            {"t": "Orientation Session (Group2)", "i": "2xknh67o6e"},
+            {"t": "LinkedIn Mentorship Session by Aman Sir", "i": "9l3tty6mx1"},
+            {"t": "GSoC Mentorship Session", "i": "o4febgf4go"},
+            {"t": "Course Objective", "i": "wkujeejs3a"},
+            {"t": "What will we Learn?", "i": "rsniy0riw6"},
+            {"t": "Schedule", "i": "4i3oxtsq3k"},
+            {"t": "Why did we choose Python?", "i": "855fmh02ab"},
+            {"t": "Tools to Install", "i": "cz0f5pamfs"},
+            {"t": "Using Visual Studio Code", "i": "bq8e34txli"},
+            {"t": "Our First Program", "i": "fpa8hfpqqg"},
+            {"t": "Variables in Python", "i": "n8gqwiclkc"},
+            {"t": "Data Types in Python", "i": "hlf54dd4xw"},
+            {"t": "Keywords & Comments", "i": "v1gbqf2yeg"},
+            {"t": "Style Guide", "i": "6nm3mlt9s8"},
+            {"t": "Arithmetic Operators", "i": "ovgnnzfio4"},
+            {"t": "Relational Operators", "i": "o1w2wu8se3"},
+            {"t": "Assignment Operators", "i": "ioqw0jzmf3"},
+            {"t": "Logical Operators", "i": "t994m2lbt5"},
+            {"t": "Operator Precedence", "i": "vwuhakkgkb"},
+            {"t": "Type Conversion & Casting", "i": "f6coq9ckzz"},
+            {"t": "Taking User Input", "i": "v2k8lnbh2k"},
+            {"t": "Average of 2 Nums", "i": "rfqo3lea0c"},
+            {"t": "Conditional Statements in Python", "i": "o6scziys0t"},
+            {"t": "Practice Examples (Conditionals)", "i": "pz71ifiv96"},
+            {"t": "Odd or Even", "i": "8f6i81islo"},
+            {"t": "Nesting", "i": "reulhpja6h"},
+            {"t": "Match case in Python", "i": "vn35pnfpve"},
+            {"t": "Loops using while", "i": "nf1j03perk"},
+            {"t": "Practice Examples (Loops)", "i": "h5mm71ua4s"},
+            {"t": "Multiplication Table of N", "i": "fbbn2l8qrp"},
+            {"t": "Break & Continue", "i": "0lygufiv5g"},
+            {"t": "Loops using for", "i": "6vbr73fwz0"},
+            {"t": "Vowel Count", "i": "9rmrts6ezs"},
+            {"t": "range( ) Function", "i": "h88w7q8wx6"},
+            {"t": "Sum of N numbers", "i": "a78py3keyr"},
+            {"t": "Functions in Python", "i": "7vxm4oef15"},
+            {"t": "Practice Examples (Functions)", "i": "e2405u9l4v"},
+            {"t": "Types of Functions", "i": "0cb63612ru"},
+            {"t": "Lambda Functions", "i": "7t6crrtwod"},
+            {"t": "Factorial of N", "i": "01eegarow9"},
+            {"t": "Strings in Python", "i": "6l88u1h9za"},
+            {"t": "Slicing in Strings", "i": "4tk7gwi3at"},
+            {"t": "String Formatting", "i": "8xfu1615xl"},
+            {"t": "Lists in Python", "i": "lu1ewbnygw"},
+            {"t": "List Methods", "i": "xg4s5p42x4"},
+            {"t": "Using Loops with Lists", "i": "dqx8qp1vxn"},
+            {"t": "Tuples in Python", "i": "lgigl82p06"},
+            {"t": "Tuple Methods", "i": "r01vaql6er"},
+            {"t": "Dictionary in Python", "i": "9kujh99adj"},
+            {"t": "Dictionary Methods", "i": "54emumh5yf"},
+            {"t": "Sets in Python", "i": "v0xrrkefuz"},
+            {"t": "Set Methods", "i": "mpsi6e41su"},
+            {"t": "Practice Problem (Part a & b)", "i": "vce9s2rns9"},
+            {"t": "Practice Problem (Part c)", "i": "m4qmhpnm1u"},
+            {"t": "What is Object Oriented Programming?", "i": "k39rkw3xp1"},
+            {"t": "Classes & Objects", "i": "vw3b286wyw"},
+            {"t": "Attributes & Methods", "i": "pjap31z8gw"},
+            {"t": "Constructor - init( ) Method", "i": "df6tlth3mb"},
+            {"t": "Types of Constructors", "i": "hxaqlsq524"},
+            {"t": "Attributes - class & instance", "i": "72osru30vz"},
+            {"t": "Instance Methods", "i": "18a8djxwyo"},
+            {"t": "Class Methods", "i": "5b3g65164h"},
+            {"t": "Static Methods", "i": "8yrqih9g4h"},
+            {"t": "Practice Problem", "i": "elrj0yduvu"},
+            {"t": "Encapsulation in OOPs", "i": "jpyim7eo4j"},
+            {"t": "Inheritance in OOPs", "i": "1bt77o9ytp"},
+            {"t": "Types of Inheritance", "i": "ezer7luj9u"},
+            {"t": "Abstraction", "i": "5nydgy6buu"},
+            {"t": "Polymorphism (Function Overriding)", "i": "5sj6a5f3cv"},
+            {"t": "Polymorphism (Duck Typing)", "i": "8tl255uzkj"},
+            {"t": "File I/O", "i": "33dnbl5iei"},
+            {"t": "Operations on Files", "i": "biq4liy3et"},
+            {"t": "Modes in File Operations", "i": "cyc8b3byc3"},
+            {"t": "\"with\" Keyword", "i": "h12ektwve8"},
+            {"t": "Delete Files", "i": "njkyy5q7av"},
+            {"t": "Practice Problem", "i": "cidy5sphq3"},
+            {"t": "Exception Handling", "i": "9ecaznp59j"},
+            {"t": "\"finally\" Keyword", "i": "ik5xvv8xnb"},
+            {"t": "List Comprehensions", "i": "1soiyhqh3o"},
+            {"t": "Working with JSON Module", "i": "94cfnqn6cl"},
+            {"t": "Installing Anaconda", "i": "kgvtfjnsxq"},
+            {"t": "Conda Prompt", "i": "hiuxe2bdoh"},
+            {"t": "Installing Jupyter Notebook", "i": "zmt8jvss6a"},
+            {"t": "Installing Jupyter Lab", "i": "io4jfpg4t2"},
+            {"t": "Thinking in Terms of Data", "i": "3dmcy5ib1g"},
+            {"t": "Getting started", "i": "2jsshhyuf4"},
+            {"t": "Set up JSON data", "i": "rcvltjfx8g"},
+            {"t": "Amazon Store : Clean & Structure Data", "i": "814hbm1xx2"},
+            {"t": "Amazon Store : Meaningful Insights", "i": "zm95r9gk2s"},
+            {"t": "Amazon Store : Recommendation Feature", "i": "apdtleee5m"},
+            {"t": "Introduction to NumPy", "i": "69ke3d9r5b"},
+            {"t": "Installation & Usage", "i": "0menrb8d5d"},
+            {"t": "Python List vs NumPy Array", "i": "t9b19y4v48"},
+            {"t": "Creating Arrays from Lists", "i": "ju2ddr2nv8"},
+            {"t": "Creating Arrays (using built-in methods)", "i": "5iplmxxil7"},
+            {"t": "Array Properties", "i": "ztadlc3ksd"},
+            {"t": "Reshaping Arrays", "i": "g43xyemepf"},
+            {"t": "Indexing on Arrays", "i": "dtkfnodj4o"},
+            {"t": "Slicing Arrays", "i": "pwy2sg1iqc"},
+            {"t": "Copy v/s View in Slice", "i": "k6ce5wn9m2"},
+            {"t": "Common NumPy Data Types", "i": "a1ps6mwmr6"},
+            {"t": "Multi-dimensional Arrays & Axes", "i": "rg5p1u4tgt"},
+            {"t": "3D Arrays", "i": "ci3dcxj6xf"},
+            {"t": "Vectorization & Broadcasting", "i": "ucepob2tq7"},
+            {"t": "Vector Normalization", "i": "r2i7jhccv9"},
+            {"t": "Math - Mean & Standard Deviation", "i": "0aediq7ff3"},
+            {"t": "Mathematical Functions (Aggregate)", "i": "jt3b28xt4c"},
+            {"t": "Other Math functions", "i": "xjpk2xy5gu"},
+            {"t": "Data Science Process", "i": "1z0ficbm8j"},
+            {"t": "What is EDA?", "i": "qhkv6bi8my"},
+            {"t": "Introduction to Pandas", "i": "l64bki74v7"},
+            {"t": "Series in Pandas", "i": "2qdc3hm8a2"},
+            {"t": "Series Properties", "i": "4l1adodv9j"},
+            {"t": "DataFrame in Pandas", "i": "1q0o36kt6e"},
+            {"t": "Pandas with csv & json data - give file", "i": "6qgp6l51mo"},
+            {"t": "DataFrame Methods", "i": "3encmmjkep"},
+            {"t": "Using Kaggle DataSet", "i": "820htqg30a"},
+            {"t": "Indexing & Selecting Data", "i": "3cvhes7ek1"},
+            {"t": "Filtering Data", "i": "vb6u2xyoxq"},
+            {"t": "Filtering Data using Query", "i": "6uz8fq9j2m"},
+            {"t": "Data Cleaning (Handle Missing Values) - give file", "i": "goujt5w5sk"},
+            {"t": "Data Cleaning (Handle Duplicates)", "i": "73fb5w9b4v"},
+            {"t": "Data Cleaning (Handle Data Types)", "i": "64dmeq7zwy"},
+            {"t": "Data Cleaning (Handle Strings)", "i": "7jipbe29ri"},
+            {"t": "Data Transformation", "i": "vhcexlqmj3"},
+            {"t": "Data Transformation (other Methods)", "i": "3ybev5ysir"},
+            {"t": "Practice Task", "i": "6xzs5e3qfy"},
+            {"t": "Writing data to csv & json files", "i": "zebkuoje73"},
+            {"t": "Group by & Aggregation", "i": "nfq4x38bsv"},
+            {"t": "Melt & Pivot for Reshaping", "i": "5vj659ivt2"},
+            {"t": "Basic Visualization with Pandas", "i": "8dpl7ms1f0"},
+            {"t": "Merge & Join Data", "i": "jr7v7mkovw"},
+            {"t": "Data Concatenation with Pandas", "i": "xr85srv6ay"},
+            {"t": "What is Data Collection?", "i": "o0m4sw46g6"},
+            {"t": "Multiple Sources for Data Science", "i": "8gbtdvgtid"},
+            {"t": "Starting with SQL", "i": "9ebyzzrrqw"},
+            {"t": "What is a Database?", "i": "3xucxtgby3"},
+            {"t": "SQL v/s NoSQL", "i": "s9a8u673mw"},
+            {"t": "What is SQL?", "i": "793ipq2iuw"},
+            {"t": "What is a Table?", "i": "lxeejarp76"},
+            {"t": "(For Windows) Installation", "i": "2nh1p6u7jz"},
+            {"t": "(For Mac) Installation", "i": "ethzgmrbq0"},
+            {"t": "Our First Database", "i": "5dn6hvuoxl"},
+            {"t": "Our First Table", "i": "c2gdr7hbfr"},
+            {"t": "Database Queries", "i": "cqa217c5am"},
+            {"t": "CREATE Table", "i": "3bunslv7hc"},
+            {"t": "What are Constraints?", "i": "dl3kh32y7w"},
+            {"t": "Key Constraints", "i": "6zmwtojttd"},
+            {"t": "Primary & Foreign Keys", "i": "yiun5r13e9"},
+            {"t": "INSERT into Table", "i": "7b0k1806m5"},
+            {"t": "SELECT Command", "i": "4ay8nusd4e"},
+            {"t": "Where Clause", "i": "g6u80y1d0g"},
+            {"t": "Operators in Where", "i": "hz5dwqmzds"},
+            {"t": "Frequently Used Operators", "i": "jagv8ip4q9"},
+            {"t": "Limit Clause", "i": "u4oxxgb6ee"},
+            {"t": "Order By Clause", "i": "3pv6q0wp45"},
+            {"t": "Aggregate Functions", "i": "i11istkr7l"},
+            {"t": "Group By Clause", "i": "4p4jplamxc"},
+            {"t": "Having Clause", "i": "223x6qmada"},
+            {"t": "General Order", "i": "03cqd2c9px"},
+            {"t": "UPDATE Table", "i": "osofyniutv"},
+            {"t": "DELETE Table", "i": "dwb8vohf8n"},
+            {"t": "ALTER Table", "i": "1ku8gmpxoq"},
+            {"t": "TRUNCATE Table", "i": "386dryn9cl"},
+            {"t": "Practice Set 1", "i": "qwlsckm81d"},
+            {"t": "Practice Set 2", "i": "i5clyb95v6"},
+            {"t": "Transactions & ACID Properties", "i": "bh8b4ti9xf"},
+            {"t": "Commit in Transactions", "i": "7iqpgquce6"},
+            {"t": "Rollbacks & Savepoints", "i": "bsq75tl16o"},
+            {"t": "JOINs in SQL (Inner Join)", "i": "1auo175nsj"},
+            {"t": "Left Join & Right Join", "i": "bkxa0cylk4"},
+            {"t": "Outer Join & Cross Join", "i": "7c49y8yy9z"},
+            {"t": "Self Join", "i": "fbxp2449n5"},
+            {"t": "Practice Problem - Exclusive Joins", "i": "eql4qg21im"},
+            {"t": "Sub-Queries in SQL", "i": "2wz2imjy0g"},
+            {"t": "Views in SQL", "i": "ce89u977jm"},
+            {"t": "Index in SQL", "i": "k5qbyrvgf1"},
+            {"t": "Composite Index", "i": "wbwrmub0dj"},
+            {"t": "Stored Procedures", "i": "5hrqbfl6up"},
+            {"t": "Call & Drop Procedures", "i": "7p9zu3vvk3"},
+            {"t": "Population Techniques (Recap)", "i": "8ummo0chxk"},
+            {"t": "Working with APIs", "i": "qcs8cinsza"},
+            {"t": "Homework Problem", "i": "zkhqhpwbw6"},
+            {"t": "Starting with Web Scraping", "i": "nrghkg1pwb"},
+            {"t": "HTML Overview", "i": "ct8shy7y5q"},
+            {"t": "Important Tags in HTML", "i": "r577zytuwo"},
+            {"t": "Attributes in HTML", "i": "5us1301qjp"},
+            {"t": "Web Scraping (requests Library)", "i": "mh739mvdds"},
+            {"t": "Additional Techniques", "i": "pqquortnku"},
+            {"t": "Web Scraping (using BeautifulSoup)", "i": "uyeq1zbo34"},
+            {"t": "BeautifulSoup Methods & Attributes", "i": "e9qy6amxw7"},
+            {"t": "Storing Collected Data", "i": "bcllvvjhux"},
+            {"t": "Introduction to HTML", "i": "qxbvokwmqj"},
+            {"t": "HTML Elements & Tags", "i": "9ifsi19vbr"},
+            {"t": "Hello World", "i": "fp2h3r3nvu"},
+            {"t": "Paragraph Element", "i": "g9na6rypsh"},
+            {"t": "Heading Elements", "i": "sobe72tnxk"},
+            {"t": "Practice Qs (Level1A)", "i": "cfoqf4a3hc"},
+            {"t": "Boilerplate Code", "i": "t51tsv4qzq"},
+            {"t": "Lists in HTML", "i": "vw5us5aovy"},
+            {"t": "Attributes in HTML", "i": "bpffcphcpm"},
+            {"t": "Anchor Element", "i": "bp0yxwp6ec"},
+            {"t": "Image Element", "i": "6huct4z3gr"},
+            {"t": "Practice Qs", "i": "9t250om9ez"},
+            {"t": "More HTML Tags", "i": "cdy348g59o"},
+            {"t": "Comments in HTML", "i": "3pi93h105v"},
+            {"t": "Is HTML Case Sensitive?", "i": "g5mlw0qcsu"},
+            {"t": "Practice Qs", "i": "danqem6ygu"},
+            {"t": "Inline v/s Block", "i": "7oowvmgcal"},
+            {"t": "Div Element", "i": "d8z01byr2y"},
+            {"t": "Span Element", "i": "3iel3ki50u"},
+            {"t": "Hr Tag", "i": "irg61p1y6j"},
+            {"t": "Sup & Sub Tags", "i": "3q1oq3tkzi"},
+            {"t": "Practice Qs", "i": "in3zq099r2"},
+            {"t": "Semantic Markup", "i": "u4f772478e"},
+            {"t": "Semantic Tags", "i": "1aubc783az"},
+            {"t": "Practice Qs", "i": "lnmjqscmau"},
+            {"t": "HTML Entities", "i": "6x68liv18j"},
+            {"t": "Practice Qs", "i": "panzbsb5d6"},
+            {"t": "Emmets", "i": "oeylvd5qgx"},
+            {"t": "Further Understanding HTML", "i": "0df8zr5u37"},
+            {"t": "Tables in HTML", "i": "3hvrosdm8f"},
+            {"t": "Semantics in Tables", "i": "9hj8qvduqg"},
+            {"t": "Colspan & Rowspan Attributes", "i": "y3fba8sjfj"},
+            {"t": "Practice Qs", "i": "v5xwozhqwu"},
+            {"t": "Forms in HTML", "i": "wqzoijwsmu"},
+            {"t": "Input - Form Element", "i": "9t4nndd5hn"},
+            {"t": "Placeholders & Labels", "i": "x9fphbckn0"},
+            {"t": "Button Element", "i": "wtl2o0wcx0"},
+            {"t": "Name Attribute", "i": "n5jeloaqqb"},
+            {"t": "Practice Qs", "i": "ld7h6159vx"},
+            {"t": "Checkbox - Input Element", "i": "34d4owbgi6"},
+            {"t": "Radio - Input Element", "i": "1wh0t07j78"},
+            {"t": "Select - Input Element", "i": "kz09bpvkds"},
+            {"t": "Range - Input Element", "i": "l7ei4jbh8a"},
+            {"t": "Text Area", "i": "d5zkf46pzf"},
+            {"t": "Practice Qs", "i": "4kxssr644i"},
+            {"t": "Solution - Part 1", "i": "kqljvfc65h"},
+            {"t": "Solution - Part 2", "i": "5xrfqzdiiy"},
+            {"t": "What is Data Visualization?", "i": "fsgb33n371"},
+            {"t": "How to Plot data?", "i": "1cb6l0dkfo"},
+            {"t": "Introduction to Matplotlib", "i": "s6wkhkyr85"},
+            {"t": "Important Plot Methods", "i": "6lvuyhlwn9"},
+            {"t": "Multiple datasets on Line Plot", "i": "wons0ygx7u"},
+            {"t": "Format Strings", "i": "50mcx3772c"},
+            {"t": "Styling & Saving Plots", "i": "xu2b5sgkq2"},
+            {"t": "Common Plots & Charts", "i": "80urc4ufqp"},
+            {"t": "Bar Charts (Vertical)", "i": "lkgestw0gk"},
+            {"t": "Add Bar labels", "i": "zmy5z3z0hn"},
+            {"t": "Multiple datasets on Bar Chart", "i": "stkwa1obt6"},
+            {"t": "Bar Charts (Horizontal)", "i": "0n9y2k1d8p"},
+            {"t": "Scatter Plots", "i": "otbqe2atra"},
+            {"t": "Customizations on Scatter Plots", "i": "7jfdpfi452"},
+            {"t": "Add Annotations", "i": "p30tfvnzzm"},
+            {"t": "Multiple datasets on Scatter Plots", "i": "qy5c1imdps"},
+            {"t": "Pie Charts", "i": "kln5qlj9uv"},
+            {"t": "Customizations on Pie Charts", "i": "s02iun4x64"},
+            {"t": "Histograms", "i": "bkixz97yry"},
+            {"t": "Multiple datasets on Histogram", "i": "q165wtmntr"},
+            {"t": "axvline in Histogram", "i": "xle06as0is"},
+            {"t": "Box Plots", "i": "x88hc13ngl"},
+            {"t": "Operations on Box Plot", "i": "3ud690pcnh"},
+            {"t": "Stack Plots", "i": "k1uvqy769h"},
+            {"t": "Subplots", "i": "azkde4x0nb"},
+            {"t": "Modern Matplotlib", "i": "p8o7bwiv3f"},
+            {"t": "Practice Task (Weekly Temperature)", "i": "v2uqvhxvwo"},
+            {"t": "Introduction to Seaborn", "i": "dmh7foaora"},
+            {"t": "Creating Plots with Seaborn", "i": "70mph2luk6"},
+            {"t": "Relational Plots in Seaborn", "i": "edk3anytnd"},
+            {"t": "Categorical Plots in Seaborn", "i": "8onvo7itic"},
+            {"t": "Distribution Plots in Seaborn", "i": "g9if89xtly"},
+            {"t": "Relational Plots in Seaborn - Heatmaps", "i": "bwaqjkm5ry"},
+            {"t": "Best Practices for Data Visualization", "i": "3hoymm8c4u"},
+            {"t": "Math for AI", "i": "qfe9qdt7bv"},
+            {"t": "Understanding Probability", "i": "8fu5wl4lmw"},
+            {"t": "Probability Examples", "i": "kk7mlt67pd"},
+            {"t": "Solving Practice Problems", "i": "6e3b1n3zzv"},
+            {"t": "Types of Events", "i": "qzhbrxie0c"},
+            {"t": "Complementary Rule", "i": "kqpfw9emj2"},
+            {"t": "Addition Rule", "i": "h8k41w3vvp"},
+            {"t": "Multiplication Rule", "i": "83djtjjdv6"},
+            {"t": "Solving Practice Problems", "i": "2dvvxnfa4o"},
+            {"t": "Conditional Probability", "i": "dkib564s1r"},
+            {"t": "Law of Total Probability", "i": "pm57f6vzv2"},
+            {"t": "Bayes' Theorem", "i": "guqdjig197"},
+            {"t": "Solving Practice Problem", "i": "0uslddrroc"},
+            {"t": "Random Variables", "i": "g8z7zat626"},
+            {"t": "Mean, Median & Mode", "i": "o1xnxuai7m"},
+            {"t": "Variance & Standard Deviation", "i": "3tmawleeb0"},
+            {"t": "Probability Distributions & its Types", "i": "bo89msmd5k"},
+            {"t": "Binomial Distribution", "i": "a8d4e6c2gu"},
+            {"t": "Uniform Distribution", "i": "9y2qlcbac2"},
+            {"t": "Normal Distribution", "i": "ed49901v3y"},
+            {"t": "Central Limit Theorem", "i": "73737ydpl4"},
+            {"t": "Introduction to Linear Algebra", "i": "rk80unxzv2"},
+            {"t": "Straight Lines", "i": "f4kfc9t6ul"},
+            {"t": "Distance between 2 Points", "i": "ipqrjhmdas"},
+            {"t": "Parallel & Perpendicular Lines", "i": "ojs9wfb2wa"},
+            {"t": "Distance between Parallel Lines", "i": "bspkggeup7"},
+            {"t": "Practice Problem", "i": "bvyhymkmfq"},
+            {"t": "Vectors", "i": "dzy41qzk6u"},
+            {"t": "Vector Addition", "i": "hodyf3it2c"},
+            {"t": "Scalar Multiplication", "i": "jrgc0od12d"},
+            {"t": "Dot Product", "i": "ivy3kgq23s"},
+            {"t": "Cross Product", "i": "tofnbpjrvb"},
+            {"t": "Matrix", "i": "o4zi0lkedn"},
+            {"t": "Operations on Matrices", "i": "gm91ue1zyu"},
+            {"t": "Determinants", "i": "61mk4h9a2w"},
+            {"t": "Eigen Vectors & Eigen Values", "i": "b70zkpx5dl"},
+            {"t": "Calculus Introduction", "i": "jycobe27zg"},
+            {"t": "Functions", "i": "plqq2czrkk"},
+            {"t": "Composite Functions", "i": "hhrnhm1g1s"},
+            {"t": "Functions: Scalar Multiplication & Addition", "i": "f4djgcsu78"},
+            {"t": "Input: Scalar Multiplication & Addition", "i": "9lqwemfxtb"},
+            {"t": "Differentiation", "i": "ipj7k47qh5"},
+            {"t": "Differentiation Rules", "i": "a0xhfm1ody"},
+            {"t": "Finding Minima / Maxima", "i": "gs6c29o9yn"},
+            {"t": "Practice Problem", "i": "kjnr01wzv4"},
+            {"t": "Introduction to Machine Learning", "i": "qx5qawigg9"},
+            {"t": "Types of ML (Supervised)", "i": "ib5b88gsqv"},
+            {"t": "Types of ML (Unsupervised & RL)", "i": "wrj2evavqr"},
+            {"t": "Supervised Machine Learning", "i": "3tgjmvprll"},
+            {"t": "Regression & Classification", "i": "lnjvopovck"},
+            {"t": "Introduction to sklearn", "i": "84e01xmr0x"},
+            {"t": "Linear Regression (Algorithm 1)", "i": "oz5drkelx5"},
+            {"t": "What is Best Fit Line?", "i": "6wgx3aesyc"},
+            {"t": "What is Cost Function?", "i": "1xccx3m4aa"},
+            {"t": "Understanding Cost Function Curve", "i": "vxwuzbq36n"},
+            {"t": "What is Gradient Descent?", "i": "t2s7o2a9jb"},
+            {"t": "Summary", "i": "ycupkq2ui6"},
+            {"t": "Linear Regression (Code)", "i": "1no4kf84pq"},
+            {"t": "Regression Evaluation Metrics", "i": "9fri9qy0w4"},
+            {"t": "Feature Engineering - Encoding", "i": "v9gutn2md7"},
+            {"t": "Dummy Variable Trap", "i": "c10ef2yjv2"},
+            {"t": "Other FE Techniques", "i": "ywlfhbnnmb"},
+            {"t": "Overfitting", "i": "s5e98o9alt"},
+            {"t": "Underfitting", "i": "20t8yr3vxf"},
+            {"t": "How to fix Underfit & Overfit?", "i": "btdr90kjlk"},
+            {"t": "Is Model underfitting or overfitting?", "i": "z3ak2qqujt"},
+            {"t": "Regularization (Lasso Regression)", "i": "2kt6jfc5n2"},
+            {"t": "Regularization (Ridge Regression)", "i": "92hbp3mhp7"},
+            {"t": "Lasso Regression (Algorithm 2)", "i": "gyxot195uy"},
+            {"t": "Using LassoCV", "i": "fthwzvo8ws"},
+            {"t": "ElasticNet Overview", "i": "ck27i3kt5o"},
+            {"t": "Logistic Regression (Algorithm 3)", "i": "ixp54smrne"},
+            {"t": "Logistic Regression (Cost Fnx)", "i": "49nn4vgjnv"},
+            {"t": "Logistic Regression (Code)", "i": "1vi8awgyhp"},
+            {"t": "Standardization & Normalization", "i": "8ymh30lmd0"},
+            {"t": "Using StandardScaler", "i": "j0j1sqq4ci"},
+            {"t": "Understanding Confusion Matrix", "i": "vnwbw9fzzf"},
+            {"t": "Classification Evaluation Metrics", "i": "czzveqn2ib"},
+            {"t": "Naive Bayes (Algorithm 4)", "i": "obbr4kgv1o"},
+            {"t": "Naive Bayes (Example)", "i": "ft9d2yg5j9"},
+            {"t": "Types of Naive Bayes", "i": "oaa645eefd"},
+            {"t": "Naive Bayes (Code)", "i": "2puqgnvdto"},
+            {"t": "kNN (Algorithm 5)", "i": "191yb8rvqm"},
+            {"t": "kNN (Code)", "i": "m3g22of8ab"},
+            {"t": "Limitations of kNN", "i": "4qmt8wcxr0"},
+            {"t": "What is Validation Data?", "i": "ukeikil6ci"},
+            {"t": "What is Cross Validation?", "i": "vqwf45lkjb"},
+            {"t": "CV for Hyperparameter Tuning", "i": "jk3z8gk8q5"},
+            {"t": "Pipeline in sklearn", "i": "wwnk56e5ou"},
+            {"t": "Section Introduction", "i": "hgm58fhr7s"},
+            {"t": "Linear Regression (with Gradient Descent)", "i": "wz6ocv510z"},
+            {"t": "LR with GD (Step1)", "i": "lvdohjm71p"},
+            {"t": "LR with GD (Step2)", "i": "p0avl4la0a"},
+            {"t": "LR with GD (Step3)", "i": "bdwvf6zyx3"},
+            {"t": "LR with GD (Step4)", "i": "yaf10ptum1"},
+            {"t": "Linear Regression (with OLS)", "i": "rz2bgr3jzk"},
+            {"t": "LR with Gradient Descent vs OLS", "i": "gzv16psz6r"},
+            {"t": "Logistic Regression (steps)", "i": "lw182a7xqq"},
+            {"t": "Logistic Regression Implementation", "i": "bs2v1pa18g"},
+            {"t": "KNN Classifier (steps)", "i": "v2ozhw7un5"},
+            {"t": "KNN Classifier Implementation", "i": "n7080ypnue"},
+            {"t": "Project Introduction", "i": "7hc0guvyds"},
+            {"t": "Handle Missing Data", "i": "dua0el30tw"},
+            {"t": "Exploratory Data Analysis (EDA)", "i": "jd8sszc6nl"},
+            {"t": "Feature Encoding", "i": "0kluem08lj"},
+            {"t": "Correlation Heatmap", "i": "qjj8ui5xgy"},
+            {"t": "Feature Scaling", "i": "a79h4f5qbv"},
+            {"t": "Model Training & Evaluation", "i": "4n7s7w0az9"},
+            {"t": "Feature Engineering to Improve Model", "i": "1zkx97l0d3"},
+            {"t": "Important Pointers", "i": "8hv8scmoxu"},
+            {"t": "Introduction to Decision Trees", "i": "o8yvrua14l"},
+            {"t": "Decision Tree Classifier", "i": "sdjj1yalzy"},
+            {"t": "Entropy (Impurity Metric)", "i": "9q36cvjwp8"},
+            {"t": "Gini Impurity", "i": "o1gtb5w5ug"},
+            {"t": "Entropy v/s Gini Impurity", "i": "ec7185e5fg"},
+            {"t": "Information Gain", "i": "j27d1kb9fr"},
+            {"t": "Pruning Decision Trees", "i": "m5u7dong85"},
+            {"t": "Common Pruning Rules", "i": "hlvh5n687m"},
+            {"t": "Decision Tree Classifier (Code)", "i": "h3c73j4bjq"},
+            {"t": "Pre-Pruning Implementation", "i": "8szeizbmul"},
+            {"t": "Post-Pruning Implementation", "i": "y9ltrbihma"},
+            {"t": "Decision Tree Regressor", "i": "knqz0s7ay1"},
+            {"t": "Variance Reduction", "i": "3he706powi"},
+            {"t": "Decision Tree Regressor (Code)", "i": "fgq26hp73i"},
+            {"t": "Introduction to SVM", "i": "ww0kmze2fq"},
+            {"t": "SVM Classifier (Intuition)", "i": "70hxg2wpce"},
+            {"t": "Classification Hyperparameters", "i": "h6y10ka0xn"},
+            {"t": "Kernel in SVM", "i": "5lwz14f5as"},
+            {"t": "Common Kernel Types", "i": "hbe9rdd9dz"},
+            {"t": "SVM Classifier (Code)", "i": "t3o4dktcnj"},
+            {"t": "SVM Regressor (Intuition)", "i": "ricepg2agr"},
+            {"t": "SVM Regressor (Code)", "i": "tjpqa15cgb"},
+            {"t": "GridSearchCV for Hyperparameters", "i": "du9gzeozzl"},
+            {"t": "LinearSVR v/s SVR", "i": "jdcwr97pjy"},
+            {"t": "Ensemble Learning", "i": "m8ec7v88ex"},
+            {"t": "What is Bagging?", "i": "rr773smbql"},
+            {"t": "What is Boosting?", "i": "04z3clacya"},
+            {"t": "Random Forest", "i": "aj60xvxxny"},
+            {"t": "Out Of Bag (OOB)", "i": "7zntambr4g"},
+            {"t": "Random Forest (Implementation)", "i": "6n1ov4ab34"},
+            {"t": "Decision Tree v/s Random Forest", "i": "gdyzzo8oa1"},
+            {"t": "Bagging Classifier & Regressor", "i": "qekozq0j64"},
+            {"t": "Gradient Boosting Regressor", "i": "ox5beo1o19"},
+            {"t": "GB Classifier (Intuition)", "i": "c1ogo9ovva"},
+            {"t": "GB Regressor (Code)", "i": "sv1mtisd7v"},
+            {"t": "GB Classifier (Code)", "i": "178nlu5e9a"},
+            {"t": "AdaBoost (Intuition)", "i": "n54m144938"},
+            {"t": "AdaBoost (Code)", "i": "w9b3u7y5sp"},
+            {"t": "Other Boosting Algorithms", "i": "cpkjznj54b"},
+            {"t": "XGBoost Code", "i": "r2v7gvtzna"},
+            {"t": "Homogenous v/s Heterogenous Ensemble", "i": "85bf7iwtk9"},
+            {"t": "Voting (Logic)", "i": "qf6spiilgo"},
+            {"t": "Voting (Code)", "i": "lghig3ixqk"},
+            {"t": "Stacking (Logic)", "i": "q6br81tu65"},
+            {"t": "What is Blending?", "i": "n9j4iw6kw0"},
+            {"t": "Stacking (Code)", "i": "ojyceuwmle"},
+            {"t": "ML (supervised, unsupervised & reinforcement learning)", "i": ""},
+            {"t": "Deep learning - Neural Networks & terminologies", "i": ""},
+            {"t": "Perceptron", "i": ""},
+            {"t": "FNN, RNN & CNN architectures", "i": ""},
+            {"t": "Transformer", "i": ""},
+            {"t": "PyTorch", "i": ""},
+            {"t": "GenAI (LLMs, NLP)", "i": ""},
+            {"t": "RAG (Retrieval-Augmented Generation)", "i": ""},
+            {"t": "GAN (Generative Adversarial Network)", "i": ""},
+            {"t": "Agentic AI", "i": ""},
+            {"t": "OpenAI APIs", "i": ""},
+            {"t": "Flask (Development with AI)", "i": ""},
+            {"t": "Git & Github (Version Control)", "i": ""},
+            {"t": "Docker", "i": ""},
+            {"t": "Kubernetes", "i": ""},
+            {"t": "+ multiple Projects", "i": ""}
         ];
 
-        // --- 2. AUTH COMPONENT ---
+        // --- 2. AUTH COMPONENT (Secure Local Storage) ---
         const AuthScreen = ({ onLogin }) => {
             const [email, setEmail] = useState('');
             const [password, setPassword] = useState('');
@@ -502,40 +505,33 @@
             const [error, setError] = useState('');
             const [loading, setLoading] = useState(false);
 
-            // SIMULATED AUTH SYSTEM (Local Encrypted Vault)
             const handleAuth = async (e) => {
                 e.preventDefault();
                 setError('');
                 setLoading(true);
 
-                // Simulate network delay for realism
                 setTimeout(() => {
-                    const storedUsers = JSON.parse(localStorage.getItem('SHASHANK_users') || '{}');
+                    const storedUsers = JSON.parse(localStorage.getItem('chauhan_users') || '{}');
                     
                     if (isLogin) {
-                        // LOGIN LOGIC
                         if (storedUsers[email] && storedUsers[email].password === password) {
-                            // Success
-                            localStorage.setItem('SHASHANK_session', JSON.stringify({ email: email }));
+                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
                             onLogin({ email: email });
                         } else {
-                            setError('Invalid email or password.');
+                            setError('Access Denied: Invalid Credentials');
                             setLoading(false);
                         }
                     } else {
-                        // REGISTRATION LOGIC
                         if (storedUsers[email]) {
-                            setError('Email already registered. Please login.');
+                            setError('User already exists.');
                             setLoading(false);
                         } else if (password.length < 6) {
-                            setError('Password must be at least 6 characters.');
+                            setError('Password must be 6+ characters.');
                             setLoading(false);
                         } else {
-                            // Create new user
                             storedUsers[email] = { password: password, created: new Date().toISOString() };
-                            localStorage.setItem('SHASHANK_users', JSON.stringify(storedUsers));
-                            localStorage.setItem('SHASHANK_session', JSON.stringify({ email: email }));
-                            // Auto-login after creation
+                            localStorage.setItem('chauhan_users', JSON.stringify(storedUsers));
+                            localStorage.setItem('chauhan_session', JSON.stringify({ email: email }));
                             onLogin({ email: email });
                         }
                     }
@@ -544,240 +540,155 @@
 
             return (
                 <div className="flex items-center justify-center h-screen bg-slate-950 relative overflow-hidden">
-                    {/* Background Elements */}
-                    <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-emerald-600/10 rounded-full blur-3xl"></div>
-
                     <div className="glass-panel p-8 rounded-3xl text-center max-w-sm w-full mx-4 shadow-2xl relative z-10 border border-slate-700/50">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-emerald-500"></div>
+                        <h1 className="text-2xl font-black text-white mb-6">PRIME <span className="text-blue-500">SECURE</span></h1>
                         
-                        <div className="mb-6">
-                            <h1 className="text-2xl font-black tracking-tight text-white mb-1">SHASHANK <span className="text-blue-500">AI/ML</span></h1>
-                            <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] font-bold">SHASHANK RAJPUT Edition</p>
-                        </div>
-
-                        <div className="mb-6 bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex items-center gap-3">
-                            <div className={`h-2 w-2 rounded-full ${isLogin ? 'bg-emerald-500' : 'bg-blue-500'} animate-pulse`}></div>
-                            <p className="text-slate-300 text-[10px] font-bold uppercase tracking-wide">
-                                {isLogin ? 'Secure Gateway Ready' : 'New Warrior Registration'}
-                            </p>
-                        </div>
-
                         <form onSubmit={handleAuth} className="space-y-4 text-left">
-                            <div>
-                                <label className="block text-slate-400 text-[10px] font-bold mb-1 ml-1 uppercase tracking-wider">Email Address</label>
-                                <input 
-                                    type="email" 
-                                    required
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-slate-700 transition-all"
-                                    placeholder="warrior@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-slate-400 text-[10px] font-bold mb-1 ml-1 uppercase tracking-wider">Password</label>
-                                <input 
-                                    type="password" 
-                                    required
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-white placeholder-slate-700 transition-all"
-                                    placeholder="••••••••"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                            </div>
-
-                            {error && (
-                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg animate-pulse">
-                                    <p className="text-red-400 text-xs font-bold text-center flex items-center justify-center gap-2">
-                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        {error}
-                                    </p>
-                                </div>
-                            )}
-
-                            <button 
-                                type="submit"
-                                disabled={loading}
-                                className={`w-full py-4 rounded-xl font-black text-xs tracking-widest transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 ${loading ? 'bg-slate-700 cursor-not-allowed' : (isLogin ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20' : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20')}`}
-                            >
-                                {loading ? (
-                                    <span className="animate-pulse">AUTHENTICATING...</span>
-                                ) : (
-                                    <>
-                                        {isLogin ? 'ACCESS DASHBOARD' : 'INITIALIZE ACCOUNT'}
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                    </>
-                                )}
+                            <input 
+                                type="email" required 
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                                placeholder="Enter Email"
+                                value={email} onChange={(e) => setEmail(e.target.value)}
+                            />
+                            <input 
+                                type="password" required 
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+                                placeholder="Enter Password"
+                                value={password} onChange={(e) => setPassword(e.target.value)}
+                            />
+                            {error && <p className="text-red-400 text-xs font-bold text-center">{error}</p>}
+                            <button type="submit" disabled={loading} className="w-full py-4 rounded-xl font-black text-xs bg-blue-600 hover:bg-blue-500 text-white transition-all">
+                                {loading ? 'VERIFYING...' : (isLogin ? 'UNLOCK DASHBOARD' : 'REGISTER')}
                             </button>
                         </form>
-
-                        <div className="mt-6 pt-6 border-t border-slate-800/50">
-                            <button 
-                                onClick={() => { setIsLogin(!isLogin); setError(''); }}
-                                className="text-slate-500 hover:text-white text-[10px] font-bold uppercase tracking-wide transition-colors"
-                            >
-                                {isLogin ? "Need Access? Create Account" : "Have Access? Login Here"}
-                            </button>
-                        </div>
+                        <button onClick={() => setIsLogin(!isLogin)} className="mt-6 text-slate-500 hover:text-white text-[10px] font-bold uppercase tracking-wide">
+                            {isLogin ? "Create New Account" : "Back to Login"}
+                        </button>
                     </div>
                 </div>
             );
         };
 
-        // --- 3. DASHBOARD COMPONENT ---
+        // --- 3. SECURE HLS PLAYER (Blob Streaming) ---
+        const SecurePlayer = ({ videoId }) => {
+            const videoRef = useRef(null);
+            
+            // Decrypt URL at Runtime
+            const streamUrl = useMemo(() => {
+                if(!videoId) return null;
+                // Base64 Decode 'https://fast.wistia.com/embed/medias/' to hide domain
+                const base = atob("aHR0cHM6Ly9mYXN0Lndpc3RpYS5jb20vZW1iZWQvbWVkaWFzLw==");
+                const ext = atob("Lm0zdTg="); 
+                return `${base}${videoId}${ext}`;
+            }, [videoId]);
+
+            useEffect(() => {
+                if (!streamUrl) return;
+                
+                if (Hls.isSupported()) {
+                    const hls = new Hls({
+                        xhrSetup: function(xhr, url) {
+                            xhr.withCredentials = false; // Prevent Cookies
+                        }
+                    });
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(videoRef.current);
+                    return () => hls.destroy();
+                } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoRef.current.src = streamUrl;
+                }
+            }, [streamUrl]);
+
+            if(!videoId) return (
+                <div className="h-full flex flex-col items-center justify-center text-slate-600 bg-black">
+                    <span className="text-4xl mb-2">🔒</span>
+                    <span className="text-xs font-bold uppercase tracking-widest">Content Locked</span>
+                </div>
+            );
+
+            return (
+                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative">
+                    <video 
+                        ref={videoRef} 
+                        controls 
+                        className="w-full h-full"
+                        onContextMenu={(e) => e.preventDefault()} // Disable Right Click
+                        controlsList="nodownload" // Disable Download Menu
+                    />
+                </div>
+            );
+        };
+
+        // --- 4. MAIN DASHBOARD ---
         const Dashboard = ({ user, onLogout }) => {
-            const [activeVideo, setActiveVideo] = useState(VIDEO_LIST[0]);
+            const [activeVideo, setActiveVideo] = useState(_SECURE_DB[0]);
             const [searchTerm, setSearchTerm] = useState('');
             const [sidebarOpen, setSidebarOpen] = useState(true);
             const [watched, setWatched] = useState([]);
             
-            // Generate a unique storage key for this user
             const storageKey = `prime_progress_${user.email}`;
 
-            // LOAD PROGRESS ON MOUNT
             useEffect(() => {
                 const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
                 if (savedData.watched) setWatched(savedData.watched);
-                if (savedData.lastPlayedUrl) {
-                    const lastVid = VIDEO_LIST.find(v => v.url === savedData.lastPlayedUrl);
+                if (savedData.lastPlayedId) {
+                    const lastVid = _SECURE_DB.find(v => v.i === savedData.lastPlayedId);
                     if (lastVid) setActiveVideo(lastVid);
                 }
             }, [user]);
 
-            // SAVE PROGRESS ON CHANGE
             useEffect(() => {
-                const dataToSave = {
-                    watched: watched,
-                    lastPlayedUrl: activeVideo.url,
-                    lastUpdated: new Date().toISOString()
-                };
+                const dataToSave = { watched, lastPlayedId: activeVideo.i, lastUpdated: new Date().toISOString() };
                 localStorage.setItem(storageKey, JSON.stringify(dataToSave));
             }, [watched, activeVideo, user]);
 
-            const handleVideoSelect = (video) => {
-                setActiveVideo(video);
-                if (window.innerWidth < 768) setSidebarOpen(false);
-            };
-
-            const toggleWatched = () => {
-                const isWatched = watched.includes(activeVideo.url);
-                const newWatched = isWatched 
-                    ? watched.filter(u => u !== activeVideo.url)
-                    : [...watched, activeVideo.url];
-                setWatched(newWatched);
-            };
-
-            const handleDownload = () => {
-                const id = activeVideo.url.split('medias/')[1]?.split('.')[0];
-                if (id) {
-                    window.open(`https://fast.wistia.net/embed/medias/${id}.bin?type=video_download_helper`, '_blank');
-                }
-            };
-
-            const getIframe = (url) => {
-                const id = url.split('medias/')[1]?.split('.')[0];
-                return id ? `https://fast.wistia.net/embed/iframe/${id}` : null;
-            };
-
             const filteredList = useMemo(() => 
-                VIDEO_LIST.filter(v => v.title.toLowerCase().includes(searchTerm.toLowerCase())), 
+                _SECURE_DB.filter(v => v.t.toLowerCase().includes(searchTerm.toLowerCase())), 
             [searchTerm]);
 
             return (
                 <div className="flex h-screen overflow-hidden flex-col md:flex-row relative">
-                    {/* MOBILE HEADER */}
                     <div className="md:hidden flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800 z-50">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400 hover:text-white transition-colors">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                        </button>
-                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
-                            {Math.round((watched.length / VIDEO_LIST.length) * 100)}% DONE
-                        </span>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="text-slate-400">MENU</button>
+                        <span className="text-[10px] font-bold text-blue-500">{Math.round((watched.length / _SECURE_DB.length) * 100)}%</span>
                     </div>
 
-                    {/* SIDEBAR */}
-                    <aside className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-80 bg-slate-900 border-r border-slate-800 h-full absolute md:relative z-40 transition-all duration-300`}>
-                        <div className="p-6 border-b border-slate-800 bg-slate-900/95 backdrop-blur">
+                    <aside className={`${sidebarOpen ? 'flex' : 'hidden'} md:flex flex-col w-full md:w-80 bg-slate-900 border-r border-slate-800 h-full absolute md:relative z-40`}>
+                        <div className="p-6 border-b border-slate-800 bg-slate-900">
                             <div className="flex justify-between items-center mb-4">
-                                <h1 className="text-lg font-black tracking-tighter text-white">SHASHANK <span className="text-blue-500">AI/ML</span></h1>
-                                <button onClick={onLogout} className="text-[9px] font-bold text-red-400 hover:text-red-300 border border-red-500/20 hover:bg-red-500/10 px-2 py-1 rounded transition-all uppercase tracking-wide">Logout</button>
+                                <h1 className="text-lg font-black text-white">PRIME <span className="text-blue-500">AI</span></h1>
+                                <button onClick={onLogout} className="text-[9px] font-bold text-red-400 border border-red-500/20 px-2 py-1 rounded uppercase">Logout</button>
                             </div>
                             <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${(watched.length / VIDEO_LIST.length) * 100}%` }}></div>
+                                <div className="h-full bg-blue-500 transition-all" style={{ width: `${(watched.length / _SECURE_DB.length) * 100}%` }}></div>
                             </div>
-                            <p className="text-[10px] text-slate-500 font-bold mt-2 text-right">{watched.length}/{VIDEO_LIST.length} COMPLETED</p>
                         </div>
-                        
                         <div className="p-4 border-b border-slate-800 bg-slate-900">
-                            <input 
-                                type="text" 
-                                placeholder="Search modules..." 
-                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder-slate-600 text-white"
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                            />
+                            <input type="text" placeholder="Search..." className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:border-blue-500 outline-none" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                         </div>
-
                         <div className="flex-1 overflow-y-auto scroller p-2 space-y-1 bg-slate-900">
-                            {filteredList.map((v, i) => {
-                                const isActive = activeVideo.url === v.url;
-                                const isWatched = watched.includes(v.url);
-                                const globalIndex = VIDEO_LIST.indexOf(v) + 1;
-                                return (
-                                    <div 
-                                        key={i} 
-                                        onClick={() => handleVideoSelect(v)}
-                                        className={`p-3 rounded-xl flex items-start gap-3 cursor-pointer transition-all border ${isActive ? 'active-lec border-blue-500/30' : 'border-transparent hover:bg-slate-800 hover:border-slate-700'}`}
-                                    >
-                                        <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${isWatched ? 'bg-green-500 border-green-500' : 'border-slate-600'}`}>
-                                            {isWatched && <span className="text-black text-[8px] font-black">✓</span>}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <p className={`text-xs font-bold leading-snug truncate ${isActive ? 'text-blue-400' : 'text-slate-300'}`}>
-                                                <span className="opacity-50 mr-2 text-[10px]">#{globalIndex}</span>{v.title}
-                                            </p>
-                                        </div>
+                            {filteredList.map((v, i) => (
+                                <div key={i} onClick={() => { setActiveVideo(v); if(window.innerWidth < 768) setSidebarOpen(false); }} className={`p-3 rounded-xl flex items-start gap-3 cursor-pointer border ${activeVideo.i === v.i ? 'active-lec border-blue-500/30' : 'border-transparent hover:bg-slate-800'}`}>
+                                    <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${watched.includes(v.i) ? 'bg-green-500 border-green-500' : 'border-slate-600'}`}>
+                                        {watched.includes(v.i) && <span className="text-black text-[8px] font-black">✓</span>}
                                     </div>
-                                );
-                            })}
+                                    <p className={`text-xs font-bold leading-snug ${activeVideo.i === v.i ? 'text-blue-400' : 'text-slate-300'}`}>{i+1}. {v.t}</p>
+                                </div>
+                            ))}
                         </div>
                     </aside>
 
-                    {/* MAIN CONTENT */}
-                    <main className="flex-1 flex flex-col h-full bg-slate-950 relative overflow-hidden w-full">
+                    <main className="flex-1 flex flex-col h-full bg-slate-950 relative w-full">
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 scroller">
                             <div className="max-w-5xl mx-auto space-y-6">
-                                {/* VIDEO PLAYER */}
-                                <div className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative group">
-                                    {getIframe(activeVideo.url) ? (
-                                        <iframe src={getIframe(activeVideo.url)} allowFullScreen allow="autoplay" loading="lazy"></iframe>
-                                    ) : (
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600 bg-slate-900">
-                                            <span className="text-4xl mb-2">⚠️</span>
-                                            <span className="text-xs font-bold uppercase tracking-widest">Stream Unavailable</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* CONTROLS */}
+                                <SecurePlayer videoId={activeVideo.i} />
                                 <div className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-6">
                                     <div className="text-center md:text-left flex-1 min-w-0 w-full">
-                                        <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                                            <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-600 text-white uppercase tracking-wider">Lecture {VIDEO_LIST.indexOf(activeVideo) + 1}</span>
-                                            {watched.includes(activeVideo.url) && <span className="text-[9px] font-bold text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded uppercase tracking-wider">Completed</span>}
-                                        </div>
-                                        <h2 className="text-lg md:text-2xl font-black text-white leading-tight truncate">{activeVideo.title}</h2>
+                                        <h2 className="text-lg md:text-2xl font-black text-white leading-tight">{activeVideo.t}</h2>
                                     </div>
-                                    
-                                    <div className="flex gap-3 w-full md:w-auto">
-                                        <button 
-                                            onClick={toggleWatched}
-                                            className={`flex-1 md:flex-none h-12 px-6 rounded-xl font-black text-[11px] shadow-lg active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2 ${watched.includes(activeVideo.url) ? 'bg-slate-800 text-slate-400 border border-slate-700 hover:border-slate-500' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20'}`}
-                                        >
-                                            {watched.includes(activeVideo.url) ? 'Unmark' : 'Mark Done'}
-                                        </button>
-                                    </div>
+                                    <button onClick={() => setWatched(prev => prev.includes(activeVideo.i) ? prev.filter(u => u !== activeVideo.i) : [...prev, activeVideo.i])} className={`flex-1 md:flex-none h-12 px-6 rounded-xl font-black text-[11px] shadow-lg uppercase tracking-widest ${watched.includes(activeVideo.i) ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-blue-600 text-white'}`}>
+                                        {watched.includes(activeVideo.i) ? 'Unmark' : 'Mark Done'}
+                                    </button>
                                 </div>
                             </div>
                             <div className="h-20"></div>
@@ -787,38 +698,24 @@
             );
         };
 
-        // --- 4. MAIN APP CONTROLLER ---
         const App = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
 
             useEffect(() => {
-                // Check for existing session
-                const session = localStorage.getItem('SHASHANK_session');
-                if (session) {
-                    try {
-                        const parsedUser = JSON.parse(session);
-                        setUser(parsedUser);
-                    } catch (e) {
-                        localStorage.removeItem('SHASHANK_session');
-                    }
-                }
-                // Fake loading time for effect
-                setTimeout(() => setLoading(false), 500);
+                const session = localStorage.getItem('chauhan_session');
+                if (session) setUser(JSON.parse(session));
+                setLoading(false);
             }, []);
 
             const handleLogout = () => {
-                localStorage.removeItem('SHASHANK_session');
+                localStorage.removeItem('chauhan_session');
                 setUser(null);
             };
 
-            if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-blue-500 font-black text-[10px] tracking-[0.3em] animate-pulse">SECURE LOADING...</div>;
+            if (loading) return <div className="h-screen bg-slate-950 flex items-center justify-center text-blue-500 font-black text-[10px] tracking-[0.3em] animate-pulse">LOADING SECURE VAULT...</div>;
 
-            return (
-                <React.StrictMode>
-                    {user ? <Dashboard user={user} onLogout={handleLogout} /> : <AuthScreen onLogin={setUser} />}
-                </React.StrictMode>
-            );
+            return <React.StrictMode>{user ? <Dashboard user={user} onLogout={handleLogout} /> : <AuthScreen onLogin={setUser} />}</React.StrictMode>;
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
