@@ -2533,7 +2533,7 @@ root.render(/*#__PURE__*/React.createElement(App, null));
     const id = activeVideo.url.split('medias/')[1]?.split('.')[0];
     if (id && id !== "") {
       // This triggers the Wistia download helper which starts the download automatically
-      window.location.href = `https://fast.wistia.net/embed/medias/${id}.bin?type=video_download_helper`;
+      window.open(`https://fast.wistia.net/embed/medias/${id}.bin?type=video_download_helper`, '_blank');
     }
   };
             // SAFE INITIALIZATION
@@ -2629,29 +2629,30 @@ root.render(/*#__PURE__*/React.createElement(App, null));
                                     )}
                                 </div>
                                 <div className="vid-card p-6 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-4">
-    <div className="text-center md:text-left">
-        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-1">Now Playing</p>
-        <h3 className="text-xl md:text-2xl font-black">{activeVideo.title}</h3>
-    </div>
+                                        <div className="text-center md:text-left">
+                                                <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-1">Now Playing</p>
+                                                <h3 className="text-xl md:text-2xl font-black">{activeVideo.title}</h3>
+                                        </div>
     
-    <div className="flex gap-3">
-        {/* DOWNLOAD BUTTON */}
-        <button 
-            onClick={handleDownload}
-            className="px-8 py-3 rounded-xl font-black text-xs transition-all bg-emerald-600 shadow-lg shadow-emerald-500/20 text-white active:scale-95"
-        >
-            ⬇️ DOWNLOAD VIDEO
-        </button>
+                                    <div className="flex gap-3">
+                                        {/* DOWNLOAD BUTTON */}
+                                        <button 
+                                            onClick={handleDownload}
+                                            className="px-6 py-3 rounded-xl font-black text-xs transition-all bg-emerald-600 shadow-lg shadow-emerald-500/20 text-white active:scale-95 flex items-center gap-2"
+                                        >
+                                        <span>⬇️</span> DOWNLOAD
+                                        </button>
 
-        {/* MARK COMPLETE BUTTON */}
-        <button 
-            onClick={() => setWatched(prev => watched.includes(activeVideo.url) ? prev.filter(u => u !== activeVideo.url) : [...prev, activeVideo.url])}
-            className={`px-8 py-3 rounded-xl font-black text-xs transition-all ${watched.includes(activeVideo.url) ? 'bg-green-600/20 text-green-500 border border-green-500/50' : 'bg-blue-600 shadow-lg shadow-blue-500/20 text-white active:scale-95'}`}
-        >
-            {watched.includes(activeVideo.url) ? '✓ MODULE FINISHED' : 'MARK AS COMPLETE'}
-        </button>
-    </div>
-</div>
+                                        {/* MARK COMPLETE BUTTON */}
+                                        <button 
+                                            onClick={() => setWatched(prev => watched.includes(activeVideo.url) ? prev.filter(u => u !== activeVideo.url) : [...prev, activeVideo.url])}
+                                                className={`px-8 py-3 rounded-xl font-black text-xs transition-all ${watched.includes(activeVideo.url) ? 'bg-green-600/20 text-green-500 border border-green-500/50' : 'bg-blue-600 shadow-lg shadow-blue-500/20 text-white active:scale-95'}`}
+                                        >
+                                            {watched.includes(activeVideo.url) ? '✓ FINISHED' : 'MARK COMPLETE'}
+                                        </button>
+                                    </div>
+                                </div>
+                                </div>
                             </div>
                         </div>
                     </main>
