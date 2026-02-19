@@ -872,6 +872,9 @@
               disablePictureInPicture
             />
 
+            {/* TOUCH SHIELD: Fixes mobile tapping. Covers screen but leaves bottom open for scrubbing */}
+<div className="absolute inset-x-0 top-0 bottom-20 z-10 cursor-pointer" onClick={toggleUI} onMouseMove={handleInteraction}></div>
+            
             {/* TOP RIGHT CONTROLS */}
             {/* TOP RIGHT CONTROLS - UPSCALED */}
             <div
