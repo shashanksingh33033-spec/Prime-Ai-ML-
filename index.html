@@ -712,344 +712,155 @@
       };
 
       // --- 3. SECURE HLS PLAYER (Blob Streaming + Controls) ---
-      const SecurePlayer = ({
-        videoId,
-        onEnded,
-        onNext,
-        onPrev,
-        hasPrev,
-        hasNext,
-      }) => {
-        const videoRef = useRef(null);
-        const containerRef = useRef(null);
-        const hlsRef = useRef(null);
-        const [qualities, setQualities] = useState([]);
-        const [currentQuality, setCurrentQuality] = useState(-1);
-        const [playbackRate, setPlaybackRate] = useState(1);
-        const [isFullscreen, setIsFullscreen] = useState(false);
-        const [showUI, setShowUI] = useState(true);
-        const [isPlaying, setIsPlaying] = useState(false);
-        const timerRef = useRef(null);
-
-        // Decrypt URL
-        const streamUrl = useMemo(() => {
-          if (!videoId) return null;
-          const base = atob(
-            "aHR0cHM6Ly9mYXN0Lndpc3RpYS5jb20vZW1iZWQvbWVkaWFzLw=="
-          );
-          const ext = atob("Lm0zdTg=");
-          return `${base}${videoId}${ext}`;
-        }, [videoId]);
-
-        useEffect(() => {
-          if (!streamUrl) return;
-          setQualities([]);
-          setCurrentQuality(-1);
-          setPlaybackRate(1);
-          setIsPlaying(false);
-          setShowUI(true);
-          if (videoRef.current) videoRef.current.playbackRate = 1;
-
-          if (Hls.isSupported()) {
-            if (hlsRef.current) hlsRef.current.destroy();
-            const hls = new Hls({
-              xhrSetup: (xhr) => {
-                xhr.withCredentials = false;
-              },
-            });
-            hlsRef.current = hls;
-            hls.loadSource(streamUrl);
-            hls.attachMedia(videoRef.current);
-            hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
-              const levels = data.levels.map((l, index) => ({
-                id: index,
-                label: l.height ? `${l.height}p` : `Level ${index}`,
-              }));
-              setQualities(levels.reverse());
-            });
-            return () => hls.destroy();
-          } else if (
-            videoRef.current.canPlayType("application/vnd.apple.mpegurl")
-          ) {
-            videoRef.current.src = streamUrl;
-          }
-        }, [streamUrl]);
-
-        // Sync Play State
-        useEffect(() => {
-          const v = videoRef.current;
-          const handlePlay = () => setIsPlaying(true);
-          const handlePause = () => setIsPlaying(false);
-          v.addEventListener("play", handlePlay);
-          v.addEventListener("pause", handlePause);
-          return () => {
-            v.removeEventListener("play", handlePlay);
-            v.removeEventListener("pause", handlePause);
-          };
-        }, []);
-
-        // Auto-Hide Logic
-        useEffect(() => {
-          if (isPlaying) {
-            startHideTimer();
-          } else {
-            setShowUI(true);
-            clearTimeout(timerRef.current);
-          }
-          return () => clearTimeout(timerRef.current);
-        }, [isPlaying, showUI]);
-
-        const startHideTimer = () => {
-          clearTimeout(timerRef.current);
-          timerRef.current = setTimeout(() => setShowUI(false), 2000);
-        };
-
-        const handleInteraction = () => {
-          if (!showUI) setShowUI(true);
-          if (isPlaying) startHideTimer();
-        };
-
-        const toggleUI = (e) => {
-          // Allow interaction with controls if they are visible
-          if (e.target.tagName === "BUTTON" || e.target.tagName === "SELECT")
-            return;
-          setShowUI((prev) => !prev);
-        };
-
-        const changeQuality = (e) => {
-          const level = Number(e.target.value);
-          setCurrentQuality(level);
-          if (hlsRef.current) hlsRef.current.currentLevel = level;
-        };
-
-        const changeSpeed = (e) => {
-          const rate = Number(e.target.value);
-          setPlaybackRate(rate);
-          if (videoRef.current) videoRef.current.playbackRate = rate;
-        };
-
-        const toggleFullscreen = () => {
-          if (
-            !document.fullscreenElement &&
-            !document.webkitFullscreenElement
-          ) {
-            if (containerRef.current.requestFullscreen)
-              containerRef.current.requestFullscreen();
-            else if (containerRef.current.webkitRequestFullscreen)
-              containerRef.current.webkitRequestFullscreen();
-            setIsFullscreen(true);
-          } else {
-            if (document.exitFullscreen) document.exitFullscreen();
-            else if (document.webkitExitFullscreen)
-              document.webkitExitFullscreen();
-            setIsFullscreen(false);
-          }
-        };
-
-        if (!videoId)
-          return (
-            <div className="aspect-video rounded-2xl bg-black flex items-center justify-center text-slate-500">
-              Locked
-            </div>
-          );
-
-        return (
-          <div
-            ref={containerRef}
-            className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative group select-none"
-            onClick={toggleUI} // Tap anywhere to toggle UI
-            onMouseMove={handleInteraction}
-          >
-            <video
-              ref={videoRef}
-              onEnded={onEnded}
-              autoPlay
-              controls
-              className="w-full h-full"
-              onContextMenu={(e) => e.preventDefault()}
-              /* REMOVED 'nofullscreen' to fix black screen crash */
-              controlsList="nodownload noremoteplayback"
-              disablePictureInPicture
-            />
-
-            {/* TOUCH SHIELD: Fixes mobile tapping. Covers screen but leaves bottom open for scrubbing */}
-<div className="absolute inset-x-0 top-0 bottom-20 z-10 cursor-pointer" onClick={toggleUI} onMouseMove={handleInteraction}></div>
+      const SecurePlayer = ({ videoId, onEnded, onNext, onPrev, hasPrev, hasNext }) => {
+            const videoRef = useRef(null);
+            const containerRef = useRef(null);
+            const hlsRef = useRef(null);
+            const [qualities, setQualities] = useState([]);
+            const [currentQuality, setCurrentQuality] = useState(-1);
+            const [playbackRate, setPlaybackRate] = useState(1);
+            const [isFullscreen, setIsFullscreen] = useState(false);
+            const [showUI, setShowUI] = useState(true);
+            const timerRef = useRef(null);
             
-            {/* TOP RIGHT CONTROLS */}
-            {/* TOP RIGHT CONTROLS - UPSCALED */}
-            <div
-              className={`absolute top-4 right-4 z-[9999] flex gap-3 transition-opacity duration-200 ease-linear ${
-                showUI ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Speed Control */}
-              <div className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center gap-2 shadow-2xl">
-                <svg
-                  className="w-5 h-5 text-blue-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                <select
-                  value={playbackRate}
-                  onChange={changeSpeed}
-                  className="bg-transparent text-white text-sm font-bold outline-none appearance-none cursor-pointer pr-2"
-                >
-                  <option value="0.5" className="text-black">
-                    0.5x
-                  </option>
-                  <option value="0.75" className="text-black">
-                    0.75x
-                  </option>
-                  <option value="1" className="text-black">
-                    1.0x
-                  </option>
-                  <option value="1.25" className="text-black">
-                    1.25x
-                  </option>
-                  <option value="1.5" className="text-black">
-                    1.5x
-                  </option>
-                  <option value="2" className="text-black">
-                    2.0x
-                  </option>
-                </select>
-              </div>
+            const streamUrl = useMemo(() => {
+                if(!videoId) return null;
+                const base = atob("aHR0cHM6Ly9mYXN0Lndpc3RpYS5jb20vZW1iZWQvbWVkaWFzLw==");
+                const ext = atob("Lm0zdTg="); 
+                return `${base}${videoId}${ext}`;
+            }, [videoId]);
 
-              {/* Quality Control */}
-              {qualities.length > 0 && (
-                <div className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center gap-2 shadow-2xl">
-                  <svg
-                    className="w-5 h-5 text-emerald-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            useEffect(() => {
+                if (!streamUrl) return;
+                setQualities([]); setCurrentQuality(-1); setPlaybackRate(1); setShowUI(true);
+                if(videoRef.current) videoRef.current.playbackRate = 1;
+
+                if (Hls.isSupported()) {
+                    if (hlsRef.current) hlsRef.current.destroy();
+                    const hls = new Hls({ xhrSetup: xhr => { xhr.withCredentials = false; } });
+                    hlsRef.current = hls;
+                    hls.loadSource(streamUrl);
+                    hls.attachMedia(videoRef.current);
+                    hls.on(Hls.Events.MANIFEST_PARSED, (event, data) => {
+                        const levels = data.levels.map((l, index) => ({ id: index, label: l.height ? `${l.height}p` : `Level ${index}` }));
+                        setQualities(levels.reverse());
+                    });
+                    return () => hls.destroy();
+                } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoRef.current.src = streamUrl;
+                }
+            }, [streamUrl]);
+
+            const startHideTimer = () => {
+                clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => setShowUI(false), 2500);
+            };
+
+            const handleInteraction = () => {
+                setShowUI(true);
+                startHideTimer();
+            };
+
+            const toggleUI = () => {
+                setShowUI(prev => !prev);
+                if(!showUI) startHideTimer();
+            };
+
+            const changeQuality = (e) => {
+                const level = Number(e.target.value);
+                setCurrentQuality(level);
+                if (hlsRef.current) hlsRef.current.currentLevel = level;
+            };
+
+            const changeSpeed = (e) => {
+                const rate = Number(e.target.value);
+                setPlaybackRate(rate);
+                if (videoRef.current) videoRef.current.playbackRate = rate;
+            };
+
+            const toggleFullscreen = () => {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (containerRef.current.requestFullscreen) containerRef.current.requestFullscreen();
+                    else if (containerRef.current.webkitRequestFullscreen) containerRef.current.webkitRequestFullscreen();
+                    setIsFullscreen(true);
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    setIsFullscreen(false);
+                }
+            };
+
+            if(!videoId) return <div className="aspect-video rounded-2xl bg-black flex items-center justify-center text-slate-500">Locked</div>;
+
+            return (
+                <div 
+                    ref={containerRef} 
+                    className="aspect-video w-full rounded-2xl overflow-hidden bg-black ring-1 ring-slate-800 shadow-2xl relative group select-none"
+                    onClick={toggleUI}
+                    onMouseMove={handleInteraction}
+                    onTouchStart={handleInteraction}
+                >
+                    <video 
+                        ref={videoRef} 
+                        onEnded={onEnded}
+                        autoPlay
+                        controls 
+                        className="w-full h-full"
+                        onContextMenu={(e) => e.preventDefault()} 
+                        controlsList="nodownload noremoteplayback" 
+                        disablePictureInPicture
+                        playsInline
                     />
-                  </svg>
-                  <select
-                    value={currentQuality}
-                    onChange={changeQuality}
-                    className="bg-transparent text-white text-sm font-bold outline-none appearance-none cursor-pointer pr-2"
-                  >
-                    <option value="-1" className="text-black">
-                      Auto
-                    </option>
-                    {qualities.map((q) => (
-                      <option key={q.id} value={q.id} className="text-black">
-                        {q.label}
-                      </option>
-                    ))}
-                  </select>
+
+                    {/* TOP RIGHT CONTROLS */}
+                    <div className={`absolute top-4 right-4 z-[9999] flex gap-3 transition-opacity duration-200 ease-linear ${showUI ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={e => e.stopPropagation()}>
+                        <div className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center gap-2 shadow-2xl">
+                            <svg className="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <select value={playbackRate} onChange={changeSpeed} className="bg-transparent text-white text-sm font-bold outline-none appearance-none cursor-pointer pr-2">
+                                <option value="0.5" className="text-black">0.5x</option>
+                                <option value="0.75" className="text-black">0.75x</option>
+                                <option value="1" className="text-black">1.0x</option>
+                                <option value="1.25" className="text-black">1.25x</option>
+                                <option value="1.5" className="text-black">1.5x</option>
+                                <option value="2" className="text-black">2.0x</option>
+                            </select>
+                        </div>
+
+                        {qualities.length > 0 && (
+                            <div className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center gap-2 shadow-2xl">
+                                <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                <select value={currentQuality} onChange={changeQuality} className="bg-transparent text-white text-sm font-bold outline-none appearance-none cursor-pointer pr-2">
+                                    <option value="-1" className="text-black">Auto</option>
+                                    {qualities.map((q) => <option key={q.id} value={q.id} className="text-black">{q.label}</option>)}
+                                </select>
+                            </div>
+                        )}
+
+                        <button onClick={toggleFullscreen} className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center shadow-2xl hover:bg-slate-800 transition-colors">
+                            {isFullscreen ? (
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            ) : (
+                                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* BOTTOM NAVIGATION */}
+                    <div className={`absolute bottom-16 left-1/2 transform -translate-x-1/2 z-[9999] flex gap-8 transition-opacity duration-200 ease-linear pointer-events-none ${showUI ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
+                        {hasPrev && (
+                            <button onClick={(e) => { e.stopPropagation(); onPrev(); }} className="pointer-events-auto bg-black/80 backdrop-blur-md text-white/80 hover:text-white p-3 rounded-full border border-white/10 shadow-lg hover:scale-110 transition-all active:scale-95">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                        )}
+                        {hasNext && (
+                            <button onClick={(e) => { e.stopPropagation(); onNext(); }} className="pointer-events-auto bg-black/80 backdrop-blur-md text-white/80 hover:text-white p-3 rounded-full border border-white/10 shadow-lg hover:scale-110 transition-all active:scale-95">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        )}
+                    </div>
                 </div>
-              )}
-
-              {/* Fullscreen Button */}
-              <button
-                onClick={toggleFullscreen}
-                className="bg-black/90 backdrop-blur-xl rounded-xl border border-white/20 px-3 py-2 flex items-center shadow-2xl hover:bg-slate-800 transition-colors"
-              >
-                {isFullscreen ? (
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-
-            {/* BOTTOM NAVIGATION (Prev/Next) */}
-            <div
-              className={`absolute bottom-16 left-1/2 transform -translate-x-1/2 z-[9999] flex gap-8 transition-opacity duration-200 ease-linear pointer-events-none ${
-                showUI ? "opacity-100 visible" : "opacity-0 invisible"
-              }`}
-            >
-              {hasPrev && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onPrev();
-                  }}
-                  className="pointer-events-auto bg-black/80 backdrop-blur-md text-white/80 hover:text-white p-3 rounded-full border border-white/10 shadow-lg hover:scale-110 transition-all active:scale-95 group/btn"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                </button>
-              )}
-              {hasNext && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onNext();
-                  }}
-                  className="pointer-events-auto bg-black/80 backdrop-blur-md text-white/80 hover:text-white p-3 rounded-full border border-white/10 shadow-lg hover:scale-110 transition-all active:scale-95 group/btn"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="3"
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      };
+            );
+        };
 
       // --- 4. MAIN DASHBOARD ---
       const Dashboard = ({ user, onLogout }) => {
